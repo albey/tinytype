@@ -1,0 +1,53 @@
+import type { ReactNode } from 'react'
+import type { Language } from '../words'
+
+export type Mode = 'copy' | 'free'
+
+type Props = {
+  language: Language
+  onLanguageChange: (language: Language) => void
+  mode: Mode
+  onModeChange: (mode: Mode) => void
+  onNextWord: () => void
+}
+
+// Small grown-up controls in the corner.
+export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord }: Props) {
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen()
+    else document.documentElement.requestFullscreen()
+  }
+
+  return (
+    <div className="toolbar">
+      <ToolButton active={language === 'en'} onClick={() => onLanguageChange('en')}>
+        🇬🇧 EN
+      </ToolButton>
+      <ToolButton active={language === 'it'} onClick={() => onLanguageChange('it')}>
+        🇮🇹 IT
+      </ToolButton>
+      <span className="divider" />
+      <ToolButton active={mode === 'copy'} onClick={() => onModeChange('copy')}>
+        Copy
+      </ToolButton>
+      <ToolButton active={mode === 'free'} onClick={() => onModeChange('free')}>
+        Free play
+      </ToolButton>
+      <span className="divider" />
+      <ToolButton onClick={onNextWord}>Next word →</ToolButton>
+      <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>
+    </div>
+  )
+}
+
+function ToolButton({ active, onClick, children }: { active?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      className={active ? 'tool active' : 'tool'}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  )
+}
