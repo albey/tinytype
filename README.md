@@ -17,7 +17,8 @@ Made for a toddler who loves banging on the laptop keyboard. Works best on a lap
 
 | Control | What it does |
 |---|---|
-| Letter keys | Type the next letter |
+| Letter keys | Type the next letter. Each correct letter is said out loud |
+| Enter or 🔊 | Hear the whole word |
 | Backspace | Delete the last letter |
 | Coloured circles | Choose the colour of the next letters |
 | 🇬🇧 EN / 🇮🇹 IT | Switch language (words and voice) |
@@ -25,6 +26,7 @@ Made for a toddler who loves banging on the laptop keyboard. Works best on a lap
 | **Free play** | Any letter is kept. Wrong ones show faded with a "bonk", and the child deletes them with Backspace |
 | Next word → | Skip to the next word |
 | ⛶ Full screen | Hides the browser bars so little hands can't click them |
+| ⚙ Settings | Your own word list, in-order or random words, and how many times each word repeats |
 
 **Tip:** use Full screen and stay nearby. A web page can't block shortcuts like Cmd+Q or Cmd+W.
 
@@ -69,26 +71,23 @@ The terminal prints an address. Open **http://localhost:5173** in your browser a
 
 To stop TinyType, click the terminal window and press **Ctrl+C**. Next time, you only need `npm run dev`.
 
-## Change the words
+## Choose the words
 
-The words live in [`src/words.ts`](src/words.ts). Open it in any text editor and add or change words in capitals:
+Open **⚙ Settings**:
 
-```ts
-export const WORDS = {
-  en: ['MOM', 'DAD', 'BABY', 'CAT', 'DOG', 'BALL'],
-  it: ['MAMMA', 'PAPÀ', 'NONNA', 'CANE', 'GATTO', 'PALLA'],
-}
-```
+- **Words:** type a word and press **Add**. Tap **×** to remove one, or tap a word to practise it right away. Each language has its own list.
+- **Order:** go through the words **in order**, or pick them **at random** (never the same word twice in a row).
+- **Repeat each word:** from once to 5 times. Dots under the word show how many times it's been done.
 
-Save the file and the page updates by itself. Accented letters are fine: a plain **A** on the keyboard counts for **À**.
+Your words and settings are saved in this browser, so they're still there next time. Accented letters are fine: a plain **A** on the keyboard counts for **À**.
 
-A settings screen for adding words without editing code is coming next.
+The starter words are in [`src/words.ts`](src/words.ts) if you want to change the defaults.
 
 ## Roadmap
 
 - [x] Copy a word letter by letter, colours, English and Italian, read-aloud
-- [ ] Add your own words in the app, random order, repeat each word a few times
-- [ ] Tap a letter to hear it ("A for Apple")
+- [x] Your own word lists, random order, repeat each word, hear the word and each letter
+- [ ] Tap a letter to hear it with an example ("A for Apple")
 - [ ] Memory mode: hide the word, or show a picture to spell
 - [ ] Online version, nothing to install
 - [ ] iPad / tablet app with a big on-screen keyboard
@@ -108,7 +107,8 @@ npm run lint      # lint with oxlint
 | `src/App.tsx` | Game state and keyboard handling |
 | `src/components/WordRows.tsx` | The word and the typing slots |
 | `src/components/ColourPicker.tsx` | Colour swatches |
-| `src/components/Toolbar.tsx` | Language, mode, next word, full screen |
+| `src/components/Toolbar.tsx` | Language, mode, next word, full screen, settings |
+| `src/components/SettingsPanel.tsx` | Word lists, order and repeats |
 | `src/words.ts` | Word lists and letter matching |
 | `src/speech.ts`, `src/sounds.ts` | Read-aloud and the "bonk" sound |
 

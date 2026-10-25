@@ -75,8 +75,47 @@ button {
   place-items: center;
 }
 
+.play {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.speak {
+  width: 88px;
+  height: 88px;
+  margin-top: 4vh;
+  border: 0;
+  border-radius: 50%;
+  background: var(--panel);
+  font-size: 44px;
+}
+
+.speak:active {
+  transform: scale(0.92);
+}
+
+.rounds {
+  position: absolute;
+  bottom: 8%;
+  display: flex;
+  gap: 14px;
+}
+
+.round {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid var(--guide);
+}
+
+.round.filled {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
 .rows {
-  --size: min(22vh, calc(70vw / var(--letters)));
+  --size: min(22vh, calc(62vw / var(--letters)));
   display: grid;
   grid-template-columns: repeat(var(--letters), var(--size));
   column-gap: calc(var(--size) * 0.15);
@@ -155,6 +194,132 @@ button {
 .swatch.selected {
   transform: scale(1.15);
   box-shadow: 0 0 0 5px var(--panel), 0 0 0 9px var(--ink);
+}
+
+/* Settings */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(29 27 32 / 0.35);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings {
+  width: min(420px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 20px 24px;
+  user-select: text;
+}
+
+.settings header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.settings section {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--guide);
+}
+
+.settings h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.hint {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.word-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--guide);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.chip.current {
+  border-color: var(--ink);
+}
+
+.chip button {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.chip-word {
+  padding: 6px 4px 6px 14px;
+  font-weight: 800;
+}
+
+.chip-word:only-child {
+  padding-right: 14px;
+}
+
+.chip-remove {
+  padding: 6px 12px 6px 6px;
+  color: var(--muted) !important;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.add-word {
+  display: flex;
+  gap: 8px;
+}
+
+.add-word input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--guide);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 800;
+  background: #fff;
+  color: var(--ink);
+}
+
+.add-word button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link {
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 @keyframes blink {

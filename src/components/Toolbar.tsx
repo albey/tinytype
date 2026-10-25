@@ -9,10 +9,11 @@ type Props = {
   mode: Mode
   onModeChange: (mode: Mode) => void
   onNextWord: () => void
+  onOpenSettings: () => void
 }
 
 // Small grown-up controls in the corner.
-export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord }: Props) {
+export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord, onOpenSettings }: Props) {
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen()
     else document.documentElement.requestFullscreen()
@@ -36,6 +37,7 @@ export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNext
       <span className="divider" />
       <ToolButton onClick={onNextWord}>Next word →</ToolButton>
       <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>
+      <ToolButton onClick={onOpenSettings}>⚙ Settings</ToolButton>
     </div>
   )
 }
