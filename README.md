@@ -2,10 +2,10 @@
 
 A simple typing game for toddlers. A word appears in big capital letters, and your child copies it underneath, one letter at a time, on a real keyboard. When the word is finished, TinyType says it out loud and celebrates.
 
-![TinyType: the word MOM with three empty slots underneath and a colour picker on the right](docs/screenshot.png)
+![TinyType: the word MOM in boxes, the first M typed in blue and a faint O showing the next letter, a picture of a woman next to the word, and the colour picker with arrow keys on the right](docs/screenshot.png)
 
 - **Big, uppercase letters**, the same as the ones printed on the keyboard, whether Caps Lock is on or not
-- **One slot per letter**, with a blinking cursor showing which letter comes next
+- **One slot per letter**, with the next letter gently blinking, very faint, in its slot
 - **Colour picker**: each letter comes out in the colour chosen when it was typed
 - **Gentle mistakes**: a wrong letter wobbles and plays a soft "bonk"
 - **English and Italian**, with matching words and voice
@@ -19,14 +19,15 @@ Made for a toddler who loves banging on the laptop keyboard. Works best on a lap
 |---|---|
 | Letter keys | Type the next letter. Each correct letter is said out loud |
 | Enter or 🔊 | Hear the whole word |
+| ← → | Previous or next word (← retraces the words shown, in random order too) |
 | Backspace | Delete the last letter |
-| Coloured circles | Choose the colour of the next letters |
+| Coloured circles or ↑ ↓ | Choose the colour of the next letters (the ▲ ▼ keys on the picker show which keys to press). The last one is 🌈 rainbow: every letter gets all the colours |
 | 🇬🇧 EN / 🇮🇹 IT | Switch language (words and voice) |
 | **Copy** | A wrong letter wobbles and isn't kept, so the child tries again |
 | **Free play** | Any letter is kept. Wrong ones show faded with a "bonk", and the child deletes them with Backspace |
 | Next word → | Skip to the next word |
 | ⛶ Full screen | Hides the browser bars so little hands can't click them |
-| ⚙ Settings | Your own word list, in-order or random words, and how many times each word repeats |
+| ⚙ Settings | Your own word list, in-order or random words, how many times each word repeats, hint letters, letter boxes, confetti |
 
 **Tip:** use Full screen and stay nearby. A web page can't block shortcuts like Cmd+Q or Cmd+W.
 
@@ -75,9 +76,11 @@ To stop TinyType, click the terminal window and press **Ctrl+C**. Next time, you
 
 Open **⚙ Settings**:
 
-- **Words:** type a word and press **Add**. Tap **×** to remove one, or tap a word to practise it right away. Each language has its own list.
+- **Words:** type a word and press **Add**. The picture button next to it suggests a picture if TinyType knows the word (🍌 for BANANA). Click it to pick another emoji, paste any emoji, or choose no picture. Tap **×** to remove a word, or tap it to practise it right away. Each language has its own list.
 - **Order:** go through the words **in order**, or pick them **at random** (never the same word twice in a row).
 - **Repeat each word:** from once to 5 times. Dots under the word show how many times it's been done.
+- **Sounds:** switch each one on or off: **letter sounds** as he types, **say the word** when it's finished, and the **win sound**. The 🔊 button and Enter always work.
+- **Help:** **pictures** next to the word (an emoji for about 130 common toddler words in English and Italian; other words simply have none), **hint letters** (the letters still to type in light grey), **letter boxes** (a box round each letter and its slot), and **confetti**.
 
 Your words and settings are saved in this browser, so they're still there next time. Accented letters are fine: a plain **A** on the keyboard counts for **À**.
 
@@ -108,9 +111,13 @@ npm run lint      # lint with oxlint
 | `src/components/WordRows.tsx` | The word and the typing slots |
 | `src/components/ColourPicker.tsx` | Colour swatches |
 | `src/components/Toolbar.tsx` | Language, mode, next word, full screen, settings |
-| `src/components/SettingsPanel.tsx` | Word lists, order and repeats |
+| `src/components/SettingsPanel.tsx` | Word lists, order, repeats and help switches |
+| `src/components/Confetti.tsx` | Full-screen confetti on a finished word |
 | `src/words.ts` | Word lists and letter matching |
-| `src/speech.ts`, `src/sounds.ts` | Read-aloud and the "bonk" sound |
+| `src/speech.ts`, `src/sounds.ts` | Read-aloud, the "bonk" and the "ta-da" |
+| `src/colours.ts` | The colours and the rainbow option |
+| `src/pictures.ts` | The built-in emoji picture for each word, and the choices in the picture picker |
+| `src/components/EmojiPicker.tsx` | The picture picker in Settings |
 
 ## Licence
 

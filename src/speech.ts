@@ -17,6 +17,26 @@ const LETTER_SOUNDS: Record<Language, Record<string, string>> = {
   },
 }
 
+// The browser loads its voices in the background: the first getVoices() call often returns
+// none, and an utterance without a voice falls back to the default (English) one.
+// So keep the list fresh and pick the voice ourselves.
+let voices: SpeechSynthesisVoice[] = []
+if ('speechSynthesis' in window) {
+  const load = () => (voices = speechSynthesis.getVoices())
+  load()
+  speechSynthesis.addEventListener('voiceschanged', load)
+}
+
+function voiceFor(language: Language): SpeechSynthesisVoice | undefined {
+  // Some browsers write "it_IT", others "it-IT". Prefer voices on this computer over online ones.
+  const matching = voices.filter((v) => v.lang.replace('_', '-').startsWith(language))
+  return (
+    matching.find((v) => v.lang.replace('_', '-') === VOICE_LANG[language] && v.localService) ??
+    matching.find((v) => v.localService) ??
+    matching[0]
+  )
+}
+
 // Reads text aloud with the browser's built-in voice for the language.
 // `interrupt` stops whatever is being said; otherwise the text waits its turn.
 function say(text: string, language: Language, interrupt: boolean) {
@@ -25,7 +45,7 @@ function say(text: string, language: Language, interrupt: boolean) {
   const utterance = new SpeechSynthesisUtterance(text)
   utterance.lang = VOICE_LANG[language]
   utterance.rate = 0.8
-  const voice = speechSynthesis.getVoices().find((v) => v.lang === utterance.lang)
+  const voice = voiceFor(language)
   if (voice) utterance.voice = voice
 
   if (interrupt) speechSynthesis.cancel()

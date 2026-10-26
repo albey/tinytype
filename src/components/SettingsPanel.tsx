@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { cleanWord, type Language, type Order } from '../words'
+import { EmojiPicker } from './EmojiPicker'
 
 const LANGUAGE_NAMES: Record<Language, string> = { en: 'English', it: 'Italian' }
 const REPEAT_CHOICES = [1, 2, 3, 4, 5]
@@ -8,7 +9,8 @@ type Props = {
   language: Language
   words: string[]
   currentIndex: number
-  onAddWord: (word: string) => void
+  onAddWord: (word: string, picture: string | undefined) => void
+  pictureOf: (word: string) => string | undefined
   onRemoveWord: (index: number) => void
   onPickWord: (index: number) => void
   onResetWords: () => void
@@ -16,6 +18,20 @@ type Props = {
   onOrderChange: (order: Order) => void
   repeats: number
   onRepeatsChange: (repeats: number) => void
+  hints: boolean
+  onHintsChange: (on: boolean) => void
+  boxes: boolean
+  onBoxesChange: (on: boolean) => void
+  confetti: boolean
+  onConfettiChange: (on: boolean) => void
+  winSound: boolean
+  onWinSoundChange: (on: boolean) => void
+  letterSounds: boolean
+  onLetterSoundsChange: (on: boolean) => void
+  sayWord: boolean
+  onSayWordChange: (on: boolean) => void
+  pictures: boolean
+  onPicturesChange: (on: boolean) => void
   onClose: () => void
 }
 
@@ -23,11 +39,16 @@ type Props = {
 export function SettingsPanel(props: Props) {
   const { language, words, currentIndex, order, repeats } = props
   const [draft, setDraft] = useState('')
+  const wordInput = useRef<HTMLInputElement>(null)
+  // The picture chosen for the new word; undefined means "use the built-in one, if any".
+  const [picture, setPicture] = useState<string | undefined>(undefined)
+  const shownPicture = picture === undefined ? props.pictureOf(draft) : picture || undefined
 
   function addWord(e: FormEvent) {
     e.preventDefault()
-    if (draft && !words.includes(draft)) props.onAddWord(draft)
+    if (draft && !words.includes(draft)) props.onAddWord(draft, picture)
     setDraft('')
+    setPicture(undefined)
   }
 
   return (
@@ -47,6 +68,7 @@ export function SettingsPanel(props: Props) {
             {words.map((w, i) => (
               <li key={w} className={i === currentIndex ? 'chip current' : 'chip'}>
                 <button className="chip-word" onClick={() => props.onPickWord(i)}>
+                  {props.pictureOf(w) && <span className="chip-picture">{props.pictureOf(w)}</span>}
                   {w}
                 </button>
                 {words.length > 1 && (
@@ -58,7 +80,15 @@ export function SettingsPanel(props: Props) {
             ))}
           </ul>
           <form className="add-word" onSubmit={addWord}>
+            <EmojiPicker
+              value={shownPicture}
+              onPick={(p) => {
+                setPicture(p)
+                wordInput.current?.focus() // so Enter adds the word straight after picking
+              }}
+            />
             <input
+              ref={wordInput}
               value={draft}
               onChange={(e) => setDraft(cleanWord(e.target.value))}
               placeholder="Add a word, e.g. BANANA"
@@ -95,7 +125,69 @@ export function SettingsPanel(props: Props) {
             ))}
           </div>
         </section>
+
+        <section>
+          <h3>Sounds</h3>
+          <Toggle
+            label="Letter sounds"
+            detail="Say each letter as it's typed"
+            on={props.letterSounds}
+            onChange={props.onLetterSoundsChange}
+          />
+          <Toggle
+            label="Say the word"
+            detail="Read the word aloud when it's finished (🔊 and Enter always work)"
+            on={props.sayWord}
+            onChange={props.onSayWordChange}
+          />
+          <Toggle
+            label="Win sound"
+            detail="A happy fanfare when a word is finished"
+            on={props.winSound}
+            onChange={props.onWinSoundChange}
+          />
+        </section>
+
+        <section>
+          <h3>Help</h3>
+          <Toggle
+            label="Pictures"
+            detail="A picture next to the word, when there is one for it"
+            on={props.pictures}
+            onChange={props.onPicturesChange}
+          />
+          <Toggle
+            label="Hint letters"
+            detail="Show the letter to type, in light grey, in each empty slot"
+            on={props.hints}
+            onChange={props.onHintsChange}
+          />
+          <Toggle
+            label="Letter boxes"
+            detail="A box round each letter and its slot underneath"
+            on={props.boxes}
+            onChange={props.onBoxesChange}
+          />
+          <Toggle
+            label="Confetti"
+            detail="Confetti over the whole screen when a word is finished"
+            on={props.confetti}
+            onChange={props.onConfettiChange}
+          />
+        </section>
       </aside>
+    </div>
+  )
+}
+
+function Toggle({ label, detail, on, onChange }: { label: string; detail: string; on: boolean; onChange: (on: boolean) => void }) {
+  return (
+    <div className="toggle">
+      <div>
+        <div className="toggle-label">{label}</div>
+        <div className="hint">{detail}</div>
+      </div>
+      <button className={on ? 'switch on' : 'switch'} role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} />
     </div>
   )
 }

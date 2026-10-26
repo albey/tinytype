@@ -2,6 +2,7 @@
   --ink: #1d1b20;
   --muted: #8a8590;
   --guide: #d9d6dd;
+  --hint: #ebe8ee;
   --bg: #fffdf8;
   --panel: #f3f0ea;
   --font: ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', system-ui, sans-serif;
@@ -95,6 +96,13 @@ button {
   transform: scale(0.92);
 }
 
+.picture {
+  font-size: min(18vh, 150px);
+  line-height: 1;
+  margin-top: 2vh;
+  animation: pop 0.4s ease-out both;
+}
+
 .rounds {
   position: absolute;
   bottom: 8%;
@@ -115,14 +123,28 @@ button {
 }
 
 .rows {
-  --size: min(22vh, calc(62vw / var(--letters)));
-  display: grid;
-  grid-template-columns: repeat(var(--letters), var(--size));
-  column-gap: calc(var(--size) * 0.15);
-  row-gap: calc(var(--size) * 0.3);
+  /* Fit the word in the space left by the colour picker, 🔊 and the picture: each letter
+     takes about 1.45em including its box and the gap after it. */
+  --size: min(22vh, calc((100vw - 460px) / (var(--letters) * 1.45)));
+  display: flex;
+  gap: 0.15em;
   font-size: var(--size);
   font-weight: 800;
   line-height: 1;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  width: 1em;
+  box-sizing: content-box;
+}
+
+.boxes .column {
+  padding: 0.1em 0.1em 0.12em;
+  border: 0.035em solid var(--guide);
+  border-radius: 0.14em;
 }
 
 .slot {
@@ -131,26 +153,54 @@ button {
   height: 1.15em;
 }
 
+/* Stack whatever is in a slot (hint letter, cursor) on top of each other. */
+.slot > * {
+  grid-area: 1 / 1;
+}
+
+.hint-letter {
+  color: var(--hint);
+}
+
 .slot.answer {
   position: relative;
-  border-bottom: 0.06em solid var(--guide);
 }
 
-.slot.answer.current {
-  border-bottom-color: var(--colour);
+/* The grey guide line under each slot; in the chosen colour under the current one. */
+.slot.answer::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.06em;
+  background: var(--guide);
 }
 
-.cursor {
-  width: 0.06em;
-  height: 0.8em;
-  background: var(--colour);
-  border-radius: 999px;
-  animation: blink 1s steps(1) infinite;
+.slot.answer.current::after {
+  background: var(--paint-across);
+}
+
+.cursor-letter {
+  background: var(--paint);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: blink 1.2s ease-in-out infinite;
 }
 
 .wrong {
   color: var(--guide);
   animation: wobble 0.5s ease-in-out;
+}
+
+/* All the colours in bands, top to bottom, inside the letter. */
+.typed.rainbow {
+  display: inline-block;
+  background: linear-gradient(180deg, #e53935, #fb8c00, #f9a825, #43a047, #1e88e5, #8e24aa, #ec407a);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .typed.mistake {
@@ -171,12 +221,28 @@ button {
   animation: pop 0.5s ease-out both;
 }
 
+.confetti {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.confetti span {
+  position: absolute;
+  top: -5vh;
+  animation-name: fall;
+  animation-timing-function: cubic-bezier(0.3, 0.6, 0.6, 1);
+  animation-fill-mode: both;
+}
+
 /* Colour picker */
 .colour-picker {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 14px;
+  gap: min(14px, 1.4vh);
   padding: 0 20px;
   background: var(--panel);
   border-radius: 40px 0 0 40px;
@@ -184,11 +250,30 @@ button {
 }
 
 .swatch {
-  width: 64px;
-  height: 64px;
+  width: min(64px, 7vh);
+  height: min(64px, 7vh);
   border-radius: 50%;
   border: 0;
   transition: transform 0.15s;
+}
+
+/* Drawn like a keyboard key, so it's clear the arrow keys pick the colour. */
+.arrow-key {
+  align-self: center;
+  width: 44px;
+  height: 36px;
+  border: 2px solid var(--guide);
+  border-bottom-width: 5px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.arrow-key:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .swatch.selected {
@@ -289,6 +374,78 @@ button {
   gap: 8px;
 }
 
+.chip-picture {
+  margin-right: 6px;
+}
+
+.emoji-picker {
+  position: relative;
+}
+
+.emoji-button {
+  width: 42px;
+  height: 100%;
+  min-height: 38px;
+  border: 1px solid var(--guide);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.emoji-button.empty {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.emoji-grid {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 2;
+  width: min(372px, calc(100vw - 48px));
+  max-height: 260px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid var(--guide);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
+}
+
+.emoji-grid button {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 22px;
+  padding: 4px 0;
+}
+
+.emoji-grid button:hover,
+.emoji-grid button.selected {
+  background: var(--panel);
+}
+
+.emoji-grid .emoji-none {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  color: var(--muted);
+  border: 1px dashed var(--guide);
+}
+
+.emoji-paste {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--guide);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+}
+
 .add-word input {
   flex: 1;
   min-width: 0;
@@ -316,6 +473,53 @@ button {
   text-decoration: underline;
 }
 
+.toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.toggle .hint {
+  margin: 2px 0 0;
+}
+
+.toggle-label {
+  font-weight: 700;
+}
+
+.switch {
+  flex-shrink: 0;
+  position: relative;
+  width: 46px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--guide);
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+
+.switch.on {
+  background: var(--ink);
+}
+
+.switch.on::after {
+  transform: translateX(18px);
+}
+
 .choices {
   display: flex;
   flex-wrap: wrap;
@@ -323,7 +527,8 @@ button {
 }
 
 @keyframes blink {
-  50% { opacity: 0; }
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 0.04; }
 }
 
 @keyframes wobble {
@@ -336,6 +541,10 @@ button {
 
 @keyframes bounce {
   50% { transform: translateY(-0.2em) scale(1.1); }
+}
+
+@keyframes fall {
+  to { transform: translate(var(--drift), 110vh) rotate(var(--spin)); }
 }
 
 @keyframes pop {
