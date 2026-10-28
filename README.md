@@ -2,6 +2,8 @@
 
 A simple typing game for toddlers. A word appears in big capital letters, and your child copies it underneath, one letter at a time, on a real keyboard. When the word is finished, TinyType says it out loud and celebrates.
 
+**Try it: [tinytype.pages.dev](https://tinytype.pages.dev)**. Nothing to install; open it in a browser on a laptop or desktop.
+
 ![TinyType: the word MOM in boxes, the first M typed in blue and a faint O showing the next letter, a picture of a woman next to the word, and the colour picker with arrow keys on the right](docs/screenshot.png)
 
 - **Big, uppercase letters**, the same as the ones printed on the keyboard, whether Caps Lock is on or not
@@ -91,7 +93,7 @@ The starter words are in [`src/words.ts`](src/words.ts) if you want to change th
 Computer voices can say letter names, but not letter sounds ("mmm", "b"), so TinyType plays recorded clips instead. To record your own:
 
 1. Run TinyType with `npm run dev` (recording saves the clips into the app, so it needs the development server).
-2. Open **⚙ Settings → 🎙 Record letter sounds**. It records for the language currently selected.
+2. Open **⚙ Settings → 🎙 Record letter sounds**. It records for the language currently selected. The button only appears when TinyType runs locally, not on the website.
 3. For each letter, **hold Space** while you say the sound shown (e.g. "mmm, as in mum"), then let go. It plays back straight away: hold Space again to redo it, or press **→** for the next letter. **P** plays it again.
 4. Clips are trimmed, evened out in volume and saved as `public/sounds/<en|it>/<LETTER>.wav`. Green letters in the grid are done.
 
