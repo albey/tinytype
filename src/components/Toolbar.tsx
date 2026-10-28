@@ -10,10 +10,11 @@ type Props = {
   onModeChange: (mode: Mode) => void
   onNextWord: () => void
   onOpenSettings: () => void
+  onOpenFeedback: () => void
 }
 
 // Small grown-up controls in the corner.
-export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord, onOpenSettings }: Props) {
+export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord, onOpenSettings, onOpenFeedback }: Props) {
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen()
     else document.documentElement.requestFullscreen()
@@ -38,14 +39,19 @@ export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNext
       <ToolButton onClick={onNextWord}>Next word →</ToolButton>
       <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>
       <ToolButton onClick={onOpenSettings}>⚙ Settings</ToolButton>
+      <ToolButton onClick={onOpenFeedback} label="Send feedback">
+        💬
+      </ToolButton>
     </div>
   )
 }
 
-function ToolButton({ active, onClick, children }: { active?: boolean; onClick: () => void; children: ReactNode }) {
+function ToolButton({ active, onClick, label, children }: { active?: boolean; onClick: () => void; label?: string; children: ReactNode }) {
   return (
     <button
       className={active ? 'tool active' : 'tool'}
+      aria-label={label}
+      title={label}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
     >

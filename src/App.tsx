@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { COLOURS, stepColour } from './colours'
 import { ColourPicker } from './components/ColourPicker'
 import { Confetti } from './components/Confetti'
+import { Feedback } from './components/Feedback'
 import { SettingsPanel } from './components/SettingsPanel'
 import { Toolbar, type Mode } from './components/Toolbar'
 import { WordRows, type TypedLetter, type WrongLetter } from './components/WordRows'
@@ -41,6 +42,7 @@ export default function App() {
   const [wrong, setWrong] = useState<WrongLetter | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [recorderOpen, setRecorderOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   // Find out which recorded letter sounds ship with the app.
   useEffect(() => {
@@ -112,7 +114,7 @@ export default function App() {
     function onKeyDown(e: KeyboardEvent) {
       // Leave shortcuts like Cmd+R alone so grown-ups can still use the browser.
       if (e.metaKey || e.ctrlKey) return
-      if (settingsOpen || recorderOpen) return
+      if (settingsOpen || recorderOpen || feedbackOpen) return
 
       if (e.key === 'Enter') {
         e.preventDefault()
@@ -174,7 +176,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
     // nextWord and previousWord are covered by the values they read: currentIndex, words, order and history.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsOpen, recorderOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, currentIndex, words, order, history])
+  }, [settingsOpen, recorderOpen, feedbackOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, currentIndex, words, order, history])
 
   // Clear a wrong letter after its wobble.
   useEffect(() => {
@@ -205,6 +207,7 @@ export default function App() {
         onModeChange={setMode}
         onNextWord={nextWord}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenFeedback={() => setFeedbackOpen(true)}
       />
       <main className="stage">
         <div className="play">
@@ -279,6 +282,7 @@ export default function App() {
       )}
 
       {recorderOpen && <Recorder language={language} onClose={() => setRecorderOpen(false)} />}
+      {feedbackOpen && <Feedback language={language} onClose={() => setFeedbackOpen(false)} />}
     </div>
   )
 }

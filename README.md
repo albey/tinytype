@@ -11,7 +11,7 @@ A simple typing game for toddlers. A word appears in big capital letters, and yo
 - **Colour picker**: each letter comes out in the colour chosen when it was typed
 - **Gentle mistakes**: a wrong letter wobbles and plays a soft "bonk"
 - **English and Italian**, with matching words and voice
-- **No accounts, no tracking**: nothing leaves your computer. Settings are saved in your browser.
+- **No accounts, no tracking**: nothing leaves your computer unless you send feedback with the 💬 button. Settings are saved in your browser.
 
 Made for a toddler who loves banging on the laptop keyboard. Works best on a laptop or desktop with a physical keyboard. A tablet version is planned.
 
@@ -30,6 +30,7 @@ Made for a toddler who loves banging on the laptop keyboard. Works best on a lap
 | Next word → | Skip to the next word |
 | ⛶ Full screen | Hides the browser bars so little hands can't click them |
 | ⚙ Settings | Your own word list, in-order or random words, how many times each word repeats, hint letters, letter boxes, confetti |
+| 💬 | Send feedback to the author (a message and, if you want a reply, your email) |
 
 **Tip:** use Full screen and stay nearby. A web page can't block shortcuts like Cmd+Q or Cmd+W.
 
@@ -132,6 +133,7 @@ npm run lint      # lint with oxlint
 | `src/colours.ts` | The colours and the rainbow option |
 | `src/pictures.ts` | The built-in emoji picture for each word, and the choices in the picture picker |
 | `src/components/EmojiPicker.tsx` | The picture picker in Settings |
+| `src/components/Feedback.tsx` | The feedback popup (sent by email through Web3Forms) |
 
 ## Licence
 
