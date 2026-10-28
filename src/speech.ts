@@ -1,3 +1,4 @@
+import { playClip } from './letterClips'
 import { baseLetter, type Language } from './words'
 
 const VOICE_LANG: Record<Language, string> = { en: 'en-GB', it: 'it-IT' }
@@ -59,5 +60,7 @@ export function speakWord(word: string, language: Language, { interrupt = true }
 
 export function speakLetter(letter: string, language: Language) {
   const base = baseLetter(letter)
+  // A recorded clip, if there is one; the computer voice otherwise.
+  if (playClip(language, base)) return
   say(LETTER_SOUNDS[language][base] ?? base.toLowerCase(), language, true)
 }

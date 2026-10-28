@@ -39,10 +39,48 @@ export function pictureFor(word: string, custom: CustomPictures = {}): string | 
   return PICTURES[word]
 }
 
-// What the emoji picker offers: every built-in picture, plus a few extras.
-export const PICTURE_CHOICES = [
-  ...new Set([...Object.values(PICTURES), '❤️', '🌈', '🎨', '🚀', '🦄', '🦖', '🐞', '🦋', '🍓', '🍪', '⚽', '🎵', '🚲', '🛁', '🧦', '🪥']),
-]
+// Extra pictures for the picker, with English and Italian names so they can be searched.
+const EXTRAS: Record<string, string> = {
+  HEART: '❤️', CUORE: '❤️', LOVE: '❤️', AMORE: '❤️',
+  RAINBOW: '🌈', ARCOBALENO: '🌈',
+  PAINT: '🎨', COLORI: '🎨', ROCKET: '🚀', RAZZO: '🚀',
+  UNICORN: '🦄', UNICORNO: '🦄', DINOSAUR: '🦖', DINO: '🦖', DINOSAURO: '🦖',
+  LADYBUG: '🐞', LADYBIRD: '🐞', COCCINELLA: '🐞', BUTTERFLY: '🦋', FARFALLA: '🦋',
+  STRAWBERRY: '🍓', FRAGOLA: '🍓', COOKIE: '🍪', BISCUIT: '🍪', BISCOTTO: '🍪',
+  MUSIC: '🎵', MUSICA: '🎵', BIKE: '🚲', BICICLETTA: '🚲', BATH: '🛁', BAGNO: '🛁',
+  SOCK: '🧦', CALZINO: '🧦', TOOTHBRUSH: '🪥', SPAZZOLINO: '🪥',
+  CHICKEN: '🐔', GALLINA: '🐔', PENGUIN: '🐧', PINGUINO: '🐧', GIRAFFE: '🦒', GIRAFFA: '🦒',
+  WHALE: '🐳', BALENA: '🐳', OCTOPUS: '🐙', POLPO: '🐙', SHARK: '🦈', SQUALO: '🦈',
+  SNAIL: '🐌', LUMACA: '🐌', SPIDER: '🕷️', RAGNO: '🕷️', DRAGON: '🐉', DRAGO: '🐉',
+  TRACTOR: '🚜', TRATTORE: '🚜', FIRE: '🚒', POMPIERI: '🚒', POLICE: '🚓', POLIZIA: '🚓',
+  HELICOPTER: '🚁', ELICOTTERO: '🚁', ROBOT: '🤖', GHOST: '👻', FANTASMA: '👻',
+  DRUM: '🥁', TAMBURO: '🥁', GUITAR: '🎸', CHITARRA: '🎸', CROWN: '👑', CORONA: '👑',
+  SPOON: '🥄', CUCCHIAIO: '🥄', PHONE: '📱', TELEFONO: '📱', CLOCK: '⏰', OROLOGIO: '⏰',
+  SEA: '🌊', MARE: '🌊', MOUNTAIN: '⛰️', MONTAGNA: '⛰️', CLOUD: '☁️', NUVOLA: '☁️',
+  LEAF: '🍃', FOGLIA: '🍃', TOMATO: '🍅', POMODORO: '🍅', CHERRY: '🍒', CILIEGIA: '🍒',
+  WATERMELON: '🍉', ANGURIA: '🍉', CHOCOLATE: '🍫', CIOCCOLATO: '🍫', CANDY: '🍬', CARAMELLA: '🍬',
+}
+
+// Everything the picker offers, each with the words it can be found by.
+export const PICTURE_CHOICES: { emoji: string; names: string[] }[] = (() => {
+  const byEmoji = new Map<string, string[]>()
+  for (const [name, emoji] of Object.entries({ ...PICTURES, ...EXTRAS })) {
+    byEmoji.set(emoji, [...(byEmoji.get(emoji) ?? []), name])
+  }
+  return [...byEmoji].map(([emoji, names]) => ({ emoji, names }))
+})()
+
+// Choices with an English or Italian name starting with the search ("pes" finds 🐟 PESCE).
+export function searchPictures(query: string) {
+  const q = baseText(query)
+  if (!q) return PICTURE_CHOICES
+  return PICTURE_CHOICES.filter((c) => c.names.some((name) => baseText(name).startsWith(q)))
+}
+
+// Uppercase without accents, so "papa" finds PAPÀ.
+function baseText(text: string): string {
+  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim()
+}
 
 // The first emoji in some text, e.g. what was pasted into the picker. Undefined if there's none.
 export function firstEmoji(text: string): string | undefined {

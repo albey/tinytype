@@ -429,6 +429,13 @@ button {
   background: var(--panel);
 }
 
+.emoji-empty {
+  grid-column: 1 / -1;
+  margin: 8px 4px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .emoji-grid .emoji-none {
   grid-column: 1 / -1;
   font-size: 14px;
@@ -436,9 +443,9 @@ button {
   border: 1px dashed var(--guide);
 }
 
-.emoji-paste {
+.emoji-search {
   grid-column: 1 / -1;
-  margin-top: 4px;
+  margin-bottom: 4px;
   padding: 6px 10px;
   border: 1px solid var(--guide);
   border-radius: 999px;
@@ -555,4 +562,140 @@ button {
 @media (max-width: 700px) {
   .swatch { width: 44px; height: 44px; }
   .colour-picker { padding: 0 10px; gap: 10px; }
+}
+
+/* Letter-sound recorder */
+.record-button {
+  margin: 2px 0 10px;
+}
+
+.recorder {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.recorder header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.recorder h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.recorder header .tool {
+  margin-left: auto;
+}
+
+.recorder-warning {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff3cd;
+  font-size: 14px;
+}
+
+.recorder-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+.recorder-arrow {
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--guide);
+  border-bottom-width: 5px;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 20px;
+}
+
+.recorder-arrow:disabled {
+  opacity: 0.3;
+}
+
+.recorder-letter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: min(480px, 60vw);
+}
+
+.recorder-big {
+  font-size: min(30vh, 240px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.recorder-big.recording {
+  color: #e53935;
+  animation: blink 1s ease-in-out infinite;
+}
+
+.recorder-hint {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.recorder-status {
+  min-height: 1.4em;
+  color: var(--muted);
+}
+
+.recorder-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.recorder-actions .tool:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.recorder-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 6px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.recorder-grid button {
+  padding: 8px 0;
+  border: 1px solid var(--guide);
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.recorder-grid button.has-clip {
+  background: #43a047;
+  border-color: #43a047;
+  color: #fff;
+}
+
+.recorder-grid button.current {
+  outline: 3px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.recorder-tips {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
 }

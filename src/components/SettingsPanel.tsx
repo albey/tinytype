@@ -32,6 +32,7 @@ type Props = {
   onSayWordChange: (on: boolean) => void
   pictures: boolean
   onPicturesChange: (on: boolean) => void
+  onOpenRecorder: () => void
   onClose: () => void
 }
 
@@ -134,6 +135,9 @@ export function SettingsPanel(props: Props) {
             on={props.letterSounds}
             onChange={props.onLetterSoundsChange}
           />
+          <button className="tool record-button" onClick={props.onOpenRecorder}>
+            🎙 Record letter sounds ({LANGUAGE_NAMES[language]})
+          </button>
           <Toggle
             label="Say the word"
             detail="Read the word aloud when it's finished (🔊 and Enter always work)"

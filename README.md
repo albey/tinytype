@@ -76,7 +76,7 @@ To stop TinyType, click the terminal window and press **Ctrl+C**. Next time, you
 
 Open **⚙ Settings**:
 
-- **Words:** type a word and press **Add**. The picture button next to it suggests a picture if TinyType knows the word (🍌 for BANANA). Click it to pick another emoji, paste any emoji, or choose no picture. Tap **×** to remove a word, or tap it to practise it right away. Each language has its own list.
+- **Words:** type a word and press **Add**. The picture button next to it suggests a picture if TinyType knows the word (🍌 for BANANA). Click it to search for a picture by name in English or Italian (fish, pesce, dino…; Enter picks the first match), paste any emoji, or choose no picture. Tap **×** to remove a word, or tap it to practise it right away. Each language has its own list.
 - **Order:** go through the words **in order**, or pick them **at random** (never the same word twice in a row).
 - **Repeat each word:** from once to 5 times. Dots under the word show how many times it's been done.
 - **Sounds:** switch each one on or off: **letter sounds** as he types, **say the word** when it's finished, and the **win sound**. The 🔊 button and Enter always work.
@@ -85,6 +85,17 @@ Open **⚙ Settings**:
 Your words and settings are saved in this browser, so they're still there next time. Accented letters are fine: a plain **A** on the keyboard counts for **À**.
 
 The starter words are in [`src/words.ts`](src/words.ts) if you want to change the defaults.
+
+## Record the letter sounds
+
+Computer voices can say letter names, but not letter sounds ("mmm", "b"), so TinyType plays recorded clips instead. To record your own:
+
+1. Run TinyType with `npm run dev` (recording saves the clips into the app, so it needs the development server).
+2. Open **⚙ Settings → 🎙 Record letter sounds**. It records for the language currently selected.
+3. For each letter, **hold Space** while you say the sound shown (e.g. "mmm, as in mum"), then let go. It plays back straight away: hold Space again to redo it, or press **→** for the next letter. **P** plays it again.
+4. Clips are trimmed, evened out in volume and saved as `public/sounds/<en|it>/<LETTER>.wav`. Green letters in the grid are done.
+
+Letters without a recording use the computer voice. Tips: a quiet room, about a hand's width from the laptop, the same voice and volume for every letter; keep b, d, p, t short, and hold m, s, f, l for about a second.
 
 ## Roadmap
 
@@ -114,6 +125,7 @@ npm run lint      # lint with oxlint
 | `src/components/SettingsPanel.tsx` | Word lists, order, repeats and help switches |
 | `src/components/Confetti.tsx` | Full-screen confetti on a finished word |
 | `src/words.ts` | Word lists and letter matching |
+| `src/components/Recorder.tsx`, `src/recording.ts`, `src/letterClips.ts` | Recording, tidying and playing the letter-sound clips (saving is a dev-server plugin in `vite.config.ts`) |
 | `src/speech.ts`, `src/sounds.ts` | Read-aloud, the "bonk" and the "ta-da" |
 | `src/colours.ts` | The colours and the rainbow option |
 | `src/pictures.ts` | The built-in emoji picture for each word, and the choices in the picture picker |
