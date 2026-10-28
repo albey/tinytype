@@ -444,6 +444,13 @@ button {
   border: 1px dashed var(--guide);
 }
 
+.emoji-device {
+  grid-column: 1 / -1;
+  margin: 8px 4px 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .emoji-search {
   grid-column: 1 / -1;
   margin-bottom: 4px;

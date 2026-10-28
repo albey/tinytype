@@ -70,11 +70,38 @@ export const PICTURE_CHOICES: { emoji: string; names: string[] }[] = (() => {
   return [...byEmoji].map(([emoji, names]) => ({ emoji, names }))
 })()
 
-// Choices with an English or Italian name starting with the search ("pes" finds 🐟 PESCE).
+// The full emoji list (about 1,400, see scripts/build-emoji-catalogue.mjs): [emoji, search words].
+// Loaded only when the picker opens, so the game itself stays small.
+let catalogue: [string, string][] = []
+
+export async function loadEmojiCatalogue(): Promise<void> {
+  if (catalogue.length === 0) catalogue = (await import('./emojiCatalogue.json')).default as [string, string][]
+}
+
+const MAX_RESULTS = 120
+
+// The hand-picked choices first, then the rest of the emoji. Every word of the search must start
+// one of an emoji's English or Italian names ("pes" finds 🐟 PESCE, "fire tr" finds 🚒).
 export function searchPictures(query: string) {
-  const q = baseText(query)
-  if (!q) return PICTURE_CHOICES
-  return PICTURE_CHOICES.filter((c) => c.names.some((name) => baseText(name).startsWith(q)))
+  const q = baseText(query).split(/\s+/).filter(Boolean)
+  if (q.length === 0) return PICTURE_CHOICES
+  const matches = (names: string[]) => q.every((part) => names.some((name) => name.startsWith(part)))
+  const results = PICTURE_CHOICES.filter((c) => matches(c.names.map(baseText)))
+  const seen = new Set(results.map((c) => plain(c.emoji)))
+  for (const [emoji, words] of catalogue) {
+    if (results.length >= MAX_RESULTS) break
+    const names = words.split(' ')
+    if (!seen.has(plain(emoji)) && matches(names)) {
+      results.push({ emoji, names })
+      seen.add(plain(emoji))
+    }
+  }
+  return results
+}
+
+// The same emoji is sometimes written with or without the "show as picture" marker (U+FE0F).
+function plain(emoji: string): string {
+  return emoji.replace(/\uFE0F/g, '')
 }
 
 // Uppercase without accents, so "papa" finds PAPÀ.

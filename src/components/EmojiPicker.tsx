@@ -1,16 +1,30 @@
-import { useState, type KeyboardEvent } from 'react'
-import { firstEmoji, searchPictures } from '../pictures'
+import { useEffect, useState, type KeyboardEvent } from 'react'
+import { firstEmoji, loadEmojiCatalogue, searchPictures } from '../pictures'
 
 type Props = {
   value: string | undefined // the picture shown on the button
   onPick: (emoji: string) => void // "" means no picture
 }
 
+// Web pages can't open the device's emoji picker, so say how to.
+const DEVICE_EMOJI_TIP = matchMedia('(pointer: coarse)').matches
+  ? 'tap the search box, then the 😀 key on the keyboard.'
+  : /Mac/.test(navigator.userAgent)
+    ? 'click the search box, then press Ctrl + ⌘ + Space.'
+    : /Windows/.test(navigator.userAgent)
+      ? 'click the search box, then press Windows key + full stop.'
+      : "paste one into the search box."
+
 // A button showing the word's picture; opens a searchable grid to choose another, or to paste any emoji.
 export function EmojiPicker({ value, onPick }: Props) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [, setLoaded] = useState(false) // redraws once the full emoji list has arrived
   const results = searchPictures(query)
+
+  useEffect(() => {
+    if (open) loadEmojiCatalogue().then(() => setLoaded(true))
+  }, [open])
 
   function pick(emoji: string) {
     onPick(emoji)
@@ -65,13 +79,14 @@ export function EmojiPicker({ value, onPick }: Props) {
               type="button"
               key={emoji}
               className={emoji === value ? 'selected' : ''}
-              title={names.join(', ').toLowerCase()}
+              title={names.slice(0, 6).join(', ').toLowerCase()}
               onClick={() => pick(emoji)}
             >
               {emoji}
             </button>
           ))}
-          {results.length === 0 && <p className="emoji-empty">No match. Paste any emoji above.</p>}
+          {results.length === 0 && <p className="emoji-empty">No match. Try another word, or use your device's emoji (below).</p>}
+          <p className="emoji-device">Any emoji works: {DEVICE_EMOJI_TIP}</p>
         </div>
       )}
     </div>

@@ -132,10 +132,13 @@ npm run lint      # lint with oxlint
 | `src/speech.ts`, `src/sounds.ts` | Read-aloud, the "bonk" and the "ta-da" |
 | `src/colours.ts` | The colours and the rainbow option |
 | `src/pictures.ts` | The built-in emoji picture for each word, and the choices in the picture picker |
-| `src/components/EmojiPicker.tsx` | The picture picker in Settings |
+| `src/components/EmojiPicker.tsx` | The picture picker in Settings: hand-picked pictures first, then about 1,400 more emoji searchable in English and Italian |
+| `src/emojiCatalogue.json`, `scripts/build-emoji-catalogue.mjs` | The full emoji list and the script that builds it from [emojibase-data](https://github.com/milesj/emojibase) |
 | `src/components/TouchInput.tsx` | Typing with a phone or tablet keyboard |
 | `src/components/Feedback.tsx` | The feedback popup (sent by email through Web3Forms) |
 
 ## Licence
 
 [MIT](LICENSE): free to use, change and share.
+
+Emoji names come from [Emojibase](https://emojibase.dev) (MIT) and the [Unicode CLDR](https://cldr.unicode.org) annotations (Unicode licence).
