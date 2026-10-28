@@ -1,11 +1,30 @@
 export type Language = 'en' | 'it'
-export type Order = 'inOrder' | 'random'
+export type Order = 'inOrder' | 'random' | 'endless'
 export type WordLists = Record<Language, string[]>
 
 // Starter words for each language. Parents can change them in Settings.
 export const WORDS: WordLists = {
   en: ['MOM', 'DAD', 'BABY', 'CAT', 'DOG', 'BALL'],
   it: ['MAMMA', 'PAPÀ', 'NONNA', 'CANE', 'GATTO', 'PALLA'],
+}
+
+// Endless play picks from these at random. Chosen by hand, so there's nothing unsuitable for a
+// toddler; each has a picture (see pictures.ts) and is short enough to fit the screen.
+export const ENDLESS_WORDS: WordLists = {
+  en: [
+    'MOM', 'DAD', 'BABY', 'NANA', 'CAT', 'DOG', 'FISH', 'BIRD', 'COW', 'PIG', 'DUCK', 'HORSE', 'SHEEP',
+    'LION', 'BEAR', 'FROG', 'MOUSE', 'BUNNY', 'MONKEY', 'TIGER', 'OWL', 'BEE', 'TURTLE', 'APPLE', 'BANANA',
+    'MILK', 'CAKE', 'EGG', 'PIZZA', 'BREAD', 'CHEESE', 'PEAR', 'GRAPES', 'ORANGE', 'CARROT', 'WATER',
+    'BALL', 'CAR', 'BUS', 'TRAIN', 'BOAT', 'PLANE', 'HOUSE', 'BOOK', 'BED', 'HAT', 'SHOE', 'KEY', 'CUP',
+    'GIFT', 'TEDDY', 'SUN', 'MOON', 'STAR', 'TREE', 'FLOWER', 'RAIN', 'SNOW',
+  ],
+  it: [
+    'MAMMA', 'PAPÀ', 'NONNA', 'NONNO', 'BIMBO', 'GATTO', 'CANE', 'PESCE', 'MUCCA', 'MAIALE', 'PAPERA',
+    'CAVALLO', 'PECORA', 'LEONE', 'ORSO', 'RANA', 'TOPO', 'SCIMMIA', 'TIGRE', 'GUFO', 'APE', 'MELA',
+    'LATTE', 'TORTA', 'UOVO', 'PANE', 'PERA', 'UVA', 'ARANCIA', 'CAROTA', 'ACQUA', 'GELATO', 'PASTA',
+    'PALLA', 'AUTO', 'TRENO', 'BARCA', 'AEREO', 'CASA', 'LIBRO', 'LETTO', 'CHIAVE', 'TAZZA', 'REGALO',
+    'SOLE', 'LUNA', 'STELLA', 'ALBERO', 'FIORE', 'NEVE',
+  ],
 }
 
 // Strips accents so a plain "A" on the keyboard counts for "À".

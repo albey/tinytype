@@ -14,10 +14,11 @@ import { playOops, playWin } from './sounds'
 import { speakLetter, speakWord } from './speech'
 import { usePersistentState } from './usePersistentState'
 import { useTouchScreen } from './useTouchScreen'
-import { WORDS, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
+import { ENDLESS_WORDS, WORDS, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
 
 const WRONG_LETTER_MS = 700
 const CELEBRATION_MS = 3200
+const SAY_WORD_DELAY_MS = 1000
 
 export default function App() {
   // Remembered between visits.
@@ -37,7 +38,8 @@ export default function App() {
   const [customPictures, setCustomPictures] = usePersistentState<CustomPictures>('tinytype.customPictures', {})
 
   // Reset on every visit.
-  const [wordIndex, setWordIndex] = useState(0)
+  // Endless play starts somewhere new each time.
+  const [wordIndex, setWordIndex] = useState(() => (order === 'endless' ? Math.floor(Math.random() * ENDLESS_WORDS[language].length) : 0))
   const [round, setRound] = useState(0) // how many times the current word has been finished
   const [history, setHistory] = useState<number[]>([]) // words shown before this one, for ←
   const [typed, setTyped] = useState<TypedLetter[]>([])
@@ -53,8 +55,11 @@ export default function App() {
   }, [])
 
   const words = wordLists[language]
-  const currentIndex = wordIndex % words.length
-  const word = words[currentIndex]
+  // Endless play draws from the built-in list instead of the parent's.
+  const endless = order === 'endless'
+  const playList = endless ? ENDLESS_WORDS[language] : words
+  const currentIndex = wordIndex % playList.length
+  const word = playList[currentIndex]
   const full = typed.length === [...word].length
   const done = full && typed.every((letter) => letter.correct)
   const picture = pictureFor(word, customPictures)
@@ -68,7 +73,7 @@ export default function App() {
 
   function nextWord() {
     setHistory((h) => [...h, currentIndex].slice(-50))
-    goToWord(nextIndex(currentIndex, words.length, order))
+    goToWord(nextIndex(currentIndex, playList.length, order))
   }
 
   // Back to the word shown before this one (works for random order too); stays put at the start.
@@ -93,8 +98,16 @@ export default function App() {
 
   function changeLanguage(next: Language) {
     setLanguage(next)
-    goToWord(0)
+    goToWord(endless ? Math.floor(Math.random() * ENDLESS_WORDS[next].length) : 0)
     setHistory([])
+  }
+
+  // Switching to or from endless play changes the list being played.
+  function changeOrder(next: Order) {
+    setOrder(next)
+    if ((next === 'endless') === endless) return
+    setHistory([])
+    goToWord(next === 'endless' ? Math.floor(Math.random() * ENDLESS_WORDS[language].length) : 0)
   }
 
   // The history holds positions in the list, so it's cleared whenever the list changes.
@@ -107,6 +120,7 @@ export default function App() {
     const next = words.filter((_, i) => i !== index)
     setWords(next)
     // Stay on the same word if it's still there.
+    if (endless) return
     const stillThere = next.indexOf(word)
     if (stillThere >= 0) setWordIndex(stillThere)
     else goToWord(0)
@@ -196,9 +210,13 @@ export default function App() {
   useEffect(() => {
     if (!done) return
     if (winSound) playWin()
-    if (sayWordAtEnd) speakWord(word, language, { interrupt: false })
+    // Wait a moment, so the word doesn't talk over the last letter's sound.
+    const sayTimer = sayWordAtEnd ? setTimeout(() => speakWord(word, language, { interrupt: false }), SAY_WORD_DELAY_MS) : undefined
     const timer = setTimeout(finishWord, CELEBRATION_MS)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(sayTimer)
+      clearTimeout(timer)
+    }
     // Run once per finished word; adding finishWord would restart the timer on every render.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [done, word, language])
@@ -252,7 +270,7 @@ export default function App() {
         <SettingsPanel
           language={language}
           words={words}
-          currentIndex={currentIndex}
+          currentIndex={endless ? -1 : currentIndex}
           onAddWord={(w, pic) => {
             setWords([...words, w])
             // Only remember a picture the parent actually chose; otherwise the built-in one applies.
@@ -260,13 +278,17 @@ export default function App() {
           }}
           pictureOf={(w) => pictureFor(w, customPictures)}
           onRemoveWord={removeWord}
-          onPickWord={goToWord}
+          onPickWord={(i) => {
+            // Picking one of your own words leaves endless play.
+            if (endless) setOrder('random')
+            goToWord(i)
+          }}
           onResetWords={() => {
             setWords(WORDS[language])
-            goToWord(0)
+            if (!endless) goToWord(0)
           }}
           order={order}
-          onOrderChange={setOrder}
+          onOrderChange={changeOrder}
           repeats={repeats}
           onRepeatsChange={setRepeats}
           hints={hints}

@@ -113,7 +113,16 @@ export function SettingsPanel(props: Props) {
             <button className={order === 'random' ? 'tool active' : 'tool'} onClick={() => props.onOrderChange('random')}>
               Random
             </button>
+            <button className={order === 'endless' ? 'tool active' : 'tool'} onClick={() => props.onOrderChange('endless')}>
+              ♾️ Endless
+            </button>
           </div>
+          {order === 'endless' && (
+            <p className="hint">
+              Endless: random words from TinyType's own list of {LANGUAGE_NAMES[language]} toddler words (animals, food, toys…), each with a
+              picture. Your word list is kept for later.
+            </p>
+          )}
         </section>
 
         <section>

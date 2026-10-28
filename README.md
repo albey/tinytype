@@ -29,7 +29,7 @@ Made for a toddler who loves banging on the laptop keyboard. Works best on a lap
 | **Free play** | Any letter is kept. Wrong ones show faded with a "bonk", and the child deletes them with Backspace |
 | Next word → | Skip to the next word |
 | ⛶ Full screen | Hides the browser bars so little hands can't click them |
-| ⚙ Settings | Your own word list, in-order or random words, how many times each word repeats, hint letters, letter boxes, confetti |
+| ⚙ Settings | Your own word list, in-order or random words, ♾️ endless play (random words from a built-in list of toddler words), how many times each word repeats, hint letters, letter boxes, confetti |
 | 💬 | Send feedback to the author (a message and, if you want a reply, your email) |
 
 **Tip:** use Full screen and stay nearby. A web page can't block shortcuts like Cmd+Q or Cmd+W.
