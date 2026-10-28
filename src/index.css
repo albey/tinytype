@@ -34,6 +34,7 @@ button {
   grid-template-columns: 1fr auto;
   grid-template-rows: auto 1fr;
   height: 100vh;
+  height: var(--app-h, 100dvh); /* --app-h: the part above the phone keyboard, set by TouchInput */
 }
 
 /* Grown-up controls */
@@ -125,7 +126,7 @@ button {
 .rows {
   /* Fit the word in the space left by the colour picker, 🔊 and the picture: each letter
      takes about 1.45em including its box and the gap after it. */
-  --size: min(22vh, calc((100vw - 460px) / (var(--letters) * 1.45)));
+  --size: min(calc(var(--app-h, 100vh) * 0.22), calc((100vw - 460px) / (var(--letters) * 1.45)));
   display: flex;
   gap: 0.15em;
   font-size: var(--size);
@@ -559,9 +560,111 @@ button {
   to { transform: scale(1); }
 }
 
+/* Phones held upright: 🔊 and the picture above the word, the colours in a row at the bottom. */
 @media (max-width: 700px) {
-  .swatch { width: 44px; height: 44px; }
-  .colour-picker { padding: 0 10px; gap: 10px; }
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .toolbar {
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+  }
+
+  .tool {
+    font-size: 13px;
+    padding: 3px 9px;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .play {
+    display: grid;
+    grid-template-areas: 'speak picture' 'rows rows';
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    gap: 12px 24px;
+  }
+
+  .speak {
+    grid-area: speak;
+    width: 56px;
+    height: 56px;
+    margin: 0;
+    font-size: 28px;
+  }
+
+  .picture {
+    grid-area: picture;
+    font-size: min(calc(var(--app-h, 100vh) * 0.12), 72px);
+    margin: 0;
+  }
+
+  .rows-area {
+    grid-area: rows;
+  }
+
+  .rows {
+    --size: min(calc(var(--app-h, 100vh) * 0.16), calc((100vw - 32px) / (var(--letters) * 1.45)));
+  }
+
+  .colour-picker {
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    margin: 0;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .swatch {
+    width: min(36px, 9vw);
+    height: min(36px, 9vw);
+  }
+
+  .swatch.selected {
+    box-shadow: 0 0 0 3px var(--panel), 0 0 0 6px var(--ink);
+  }
+}
+
+/* The ▲ ▼ keys stand for the keyboard's arrow keys; without a keyboard, tap the colours. */
+@media (pointer: coarse) {
+  .arrow-key {
+    display: none;
+  }
+}
+
+/* Typing with the phone or tablet keyboard (see TouchInput) */
+.rows-area {
+  position: relative;
+}
+
+.touch-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  font-size: 16px; /* smaller text makes iPhones zoom in */
+  caret-color: transparent;
+}
+
+.touch-prompt {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 12px;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 15px;
+  pointer-events: none;
 }
 
 /* Letter-sound recorder */

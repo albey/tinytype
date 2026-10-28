@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { COLOURS, stepColour } from './colours'
 import { ColourPicker } from './components/ColourPicker'
 import { Confetti } from './components/Confetti'
 import { Feedback } from './components/Feedback'
+import { TouchInput } from './components/TouchInput'
 import { SettingsPanel } from './components/SettingsPanel'
 import { Toolbar, type Mode } from './components/Toolbar'
 import { WordRows, type TypedLetter, type WrongLetter } from './components/WordRows'
@@ -12,6 +13,7 @@ import { pictureFor, type CustomPictures } from './pictures'
 import { playOops, playWin } from './sounds'
 import { speakLetter, speakWord } from './speech'
 import { usePersistentState } from './usePersistentState'
+import { useTouchScreen } from './useTouchScreen'
 import { WORDS, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
 
 const WRONG_LETTER_MS = 700
@@ -43,6 +45,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [recorderOpen, setRecorderOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const touch = useTouchScreen()
 
   // Find out which recorded letter sounds ship with the app.
   useEffect(() => {
@@ -109,54 +112,48 @@ export default function App() {
     else goToWord(0)
   }
 
-  // Listen to the physical keyboard.
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      // Leave shortcuts like Cmd+R alone so grown-ups can still use the browser.
-      if (e.metaKey || e.ctrlKey) return
-      if (settingsOpen || recorderOpen || feedbackOpen) return
+  // Keys from the physical keyboard, or from the phone keyboard through TouchInput.
+  const handleKey = useRef<(key: string) => boolean>(() => false)
 
-      if (e.key === 'Enter') {
-        e.preventDefault()
+  useEffect(() => {
+    // Returns true if TinyType used the key, so the browser shouldn't.
+    function handle(key: string): boolean {
+      if (settingsOpen || recorderOpen || feedbackOpen) return false
+
+      if (key === 'Enter') {
         speakWord(word, language)
-        return
+        return true
       }
       // Up and down move through the colour picker, stopping at the top and bottom.
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        e.preventDefault()
-        setColour(stepColour(colour, e.key === 'ArrowDown' ? 1 : -1))
-        return
+      if (key === 'ArrowUp' || key === 'ArrowDown') {
+        setColour(stepColour(colour, key === 'ArrowDown' ? 1 : -1))
+        return true
       }
       // Left and right move between words.
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault()
-        if (e.key === 'ArrowRight') nextWord()
+      if (key === 'ArrowRight' || key === 'ArrowLeft') {
+        if (key === 'ArrowRight') nextWord()
         else previousWord()
-        return
+        return true
       }
-      if (done) return
+      if (done) return false
 
-      if (e.key === 'Backspace') {
-        e.preventDefault()
+      if (key === 'Backspace') {
         setTyped((t) => t.slice(0, -1))
-        return
+        return true
       }
-      if (!isLetter(e.key)) {
-        if (e.key === ' ') e.preventDefault() // stop Space scrolling the page
-        return
-      }
+      // Space would scroll the page.
+      if (!isLetter(key)) return key === ' '
 
-      e.preventDefault()
       // Every slot is filled but something's wrong: Backspace is the way out.
       if (full) {
         playOops()
-        return
+        return true
       }
 
       const expected = [...word][typed.length]
-      const correct = sameLetter(e.key, expected)
+      const correct = sameLetter(key, expected)
       // Show the word's own letter, so a plain A typed for À appears as À.
-      const char = correct ? expected : e.key.toUpperCase()
+      const char = correct ? expected : key.toUpperCase()
 
       if (correct) {
         setTyped((t) => [...t, { char, colour, correct }])
@@ -170,6 +167,16 @@ export default function App() {
         setWrong({ char, id: Date.now() })
         playOops()
       }
+      return true
+    }
+    handleKey.current = handle
+
+    function onKeyDown(e: KeyboardEvent) {
+      // Leave shortcuts like Cmd+R alone so grown-ups can still use the browser.
+      if (e.metaKey || e.ctrlKey) return
+      // Letters and Backspace typed into the phone-keyboard box arrive through TouchInput instead.
+      if (e.target instanceof HTMLElement && e.target.classList.contains('touch-input') && e.key !== 'Enter') return
+      if (handle(e.key)) e.preventDefault()
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -219,7 +226,10 @@ export default function App() {
           >
             🔊
           </button>
-          <WordRows word={word} typed={typed} wrong={wrong} colour={colour} done={done} hints={hints} boxes={boxes} />
+          <div className="rows-area">
+            <WordRows word={word} typed={typed} wrong={wrong} colour={colour} done={done} hints={hints} boxes={boxes} />
+            {touch && <TouchInput onKey={(key) => handleKey.current(key)} />}
+          </div>
           {pictures && picture && (
             <div key={word} className="picture" aria-hidden="true">
               {picture}

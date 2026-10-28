@@ -13,7 +13,7 @@ A simple typing game for toddlers. A word appears in big capital letters, and yo
 - **English and Italian**, with matching words and voice
 - **No accounts, no tracking**: nothing leaves your computer unless you send feedback with the 💬 button. Settings are saved in your browser.
 
-Made for a toddler who loves banging on the laptop keyboard. Works best on a laptop or desktop with a physical keyboard. A tablet version is planned.
+Made for a toddler who loves banging on the laptop keyboard. Works best on a laptop or desktop with a physical keyboard. On a phone or tablet, tap the word to bring up the device's keyboard.
 
 ## How to play
 
@@ -133,6 +133,7 @@ npm run lint      # lint with oxlint
 | `src/colours.ts` | The colours and the rainbow option |
 | `src/pictures.ts` | The built-in emoji picture for each word, and the choices in the picture picker |
 | `src/components/EmojiPicker.tsx` | The picture picker in Settings |
+| `src/components/TouchInput.tsx` | Typing with a phone or tablet keyboard |
 | `src/components/Feedback.tsx` | The feedback popup (sent by email through Web3Forms) |
 
 ## Licence

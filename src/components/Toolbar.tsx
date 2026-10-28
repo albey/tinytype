@@ -37,7 +37,8 @@ export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNext
       </ToolButton>
       <span className="divider" />
       <ToolButton onClick={onNextWord}>Next word →</ToolButton>
-      <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>
+      {/* iPhones can't go full screen from a web page. */}
+      {document.fullscreenEnabled && <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>}
       <ToolButton onClick={onOpenSettings}>⚙ Settings</ToolButton>
       <ToolButton onClick={onOpenFeedback} label="Send feedback">
         💬
