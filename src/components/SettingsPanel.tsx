@@ -28,6 +28,8 @@ type Props = {
   onWinSoundChange: (on: boolean) => void
   letterSounds: boolean
   onLetterSoundsChange: (on: boolean) => void
+  oopsSound: boolean
+  onOopsSoundChange: (on: boolean) => void
   sayWord: boolean
   onSayWordChange: (on: boolean) => void
   pictures: boolean
@@ -155,6 +157,12 @@ export function SettingsPanel(props: Props) {
             detail="Read the word aloud when it's finished (🔊 and Enter always work)"
             on={props.sayWord}
             onChange={props.onSayWordChange}
+          />
+          <Toggle
+            label="Wrong-letter sound"
+            detail='A soft "bonk" when a wrong letter is typed'
+            on={props.oopsSound}
+            onChange={props.onOopsSoundChange}
           />
           <Toggle
             label="Win sound"

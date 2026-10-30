@@ -9,7 +9,7 @@ A simple typing game for toddlers. A word appears in big capital letters, and yo
 - **Big, uppercase letters**, the same as the ones printed on the keyboard, whether Caps Lock is on or not
 - **One slot per letter**, with the next letter gently blinking, very faint, in its slot
 - **Colour picker**: each letter comes out in the colour chosen when it was typed
-- **Gentle mistakes**: a wrong letter wobbles and plays a soft "bonk"
+- **Gentle mistakes**: a wrong letter wobbles and plays a soft "bonk" (you can turn the bonk off in Settings)
 - **English and Italian**, with matching words and voice
 - **No accounts, no tracking**: nothing leaves your computer unless you send feedback with the 💬 button. Settings are saved in your browser.
 
@@ -19,17 +19,17 @@ Made for a toddler who loves banging on the laptop keyboard. Works best on a lap
 
 | Control | What it does |
 |---|---|
-| Letter keys | Type the next letter. Each correct letter is said out loud |
+| Letter keys | Type the next letter. Each correct letter is said out loud. A wrong one wobbles and isn't kept, so the child tries again |
 | Enter or 🔊 | Hear the whole word |
+| Space | Hear the next letter, as a hint |
 | ← → | Previous or next word (← retraces the words shown, in random order too) |
 | Backspace | Delete the last letter |
 | Coloured circles or ↑ ↓ | Choose the colour of the next letters (the ▲ ▼ keys on the picker show which keys to press). The last one is 🌈 rainbow: every letter gets all the colours |
 | 🇬🇧 EN / 🇮🇹 IT | Switch language (words and voice) |
-| **Copy** | A wrong letter wobbles and isn't kept, so the child tries again |
-| **Free play** | Any letter is kept. Wrong ones show faded with a "bonk", and the child deletes them with Backspace |
+| 🔤 Words | Pick any word from the list and play it straight away |
 | Next word → | Skip to the next word |
 | ⛶ Full screen | Hides the browser bars so little hands can't click them |
-| ⚙ Settings | Your own word list, in-order or random words, ♾️ endless play (random words from a built-in list of toddler words), how many times each word repeats, hint letters, letter boxes, confetti |
+| ⚙ Settings | Your own word list, in-order or random words, ♾️ endless play (random words from a built-in list of toddler words), how many times each word repeats, sounds on or off (letters, the wrong-letter bonk, the word, the win), hint letters, letter boxes, confetti |
 | 💬 | Send feedback to the author (a message and, if you want a reply, your email) |
 
 **Tip:** use Full screen and stay nearby. A web page can't block shortcuts like Cmd+Q or Cmd+W.

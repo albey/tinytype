@@ -7,14 +7,15 @@ type Props = {
   language: Language
   onLanguageChange: (language: Language) => void
   mode: Mode
-  onModeChange: (mode: Mode) => void
+  onModeChange?: (mode: Mode) => void // left out to hide the Copy / Free play buttons
   onNextWord: () => void
+  onOpenWordPicker: () => void
   onOpenSettings: () => void
   onOpenFeedback: () => void
 }
 
 // Small grown-up controls in the corner.
-export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord, onOpenSettings, onOpenFeedback }: Props) {
+export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord, onOpenWordPicker, onOpenSettings, onOpenFeedback }: Props) {
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen()
     else document.documentElement.requestFullscreen()
@@ -28,14 +29,19 @@ export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNext
       <ToolButton active={language === 'it'} onClick={() => onLanguageChange('it')}>
         🇮🇹 IT
       </ToolButton>
+      {onModeChange && (
+        <>
+          <span className="divider" />
+          <ToolButton active={mode === 'copy'} onClick={() => onModeChange('copy')}>
+            Copy
+          </ToolButton>
+          <ToolButton active={mode === 'free'} onClick={() => onModeChange('free')}>
+            Free play
+          </ToolButton>
+        </>
+      )}
       <span className="divider" />
-      <ToolButton active={mode === 'copy'} onClick={() => onModeChange('copy')}>
-        Copy
-      </ToolButton>
-      <ToolButton active={mode === 'free'} onClick={() => onModeChange('free')}>
-        Free play
-      </ToolButton>
-      <span className="divider" />
+      <ToolButton onClick={onOpenWordPicker}>🔤 Words</ToolButton>
       <ToolButton onClick={onNextWord}>Next word →</ToolButton>
       {/* iPhones can't go full screen from a web page. */}
       {document.fullscreenEnabled && <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>}

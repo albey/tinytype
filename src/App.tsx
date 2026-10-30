@@ -5,6 +5,7 @@ import { Confetti } from './components/Confetti'
 import { Feedback } from './components/Feedback'
 import { TouchInput } from './components/TouchInput'
 import { SettingsPanel } from './components/SettingsPanel'
+import { WordPicker } from './components/WordPicker'
 import { Toolbar, type Mode } from './components/Toolbar'
 import { WordRows, type TypedLetter, type WrongLetter } from './components/WordRows'
 import { Recorder } from './components/Recorder'
@@ -19,11 +20,13 @@ import { ENDLESS_WORDS, WORDS, isLetter, nextIndex, sameLetter, type Language, t
 const WRONG_LETTER_MS = 700
 const CELEBRATION_MS = 3200
 const SAY_WORD_DELAY_MS = 1000
+// Free play is hidden for now: everyone plays Copy. Set to true to bring the toolbar buttons back.
+const FREE_PLAY = false
 
 export default function App() {
   // Remembered between visits.
   const [language, setLanguage] = usePersistentState<Language>('tinytype.language', 'en')
-  const [mode, setMode] = usePersistentState<Mode>('tinytype.mode', 'copy')
+  const [savedMode, setMode] = usePersistentState<Mode>('tinytype.mode', 'copy')
   const [colour, setColour] = usePersistentState('tinytype.colour', COLOURS[4])
   const [wordLists, setWordLists] = usePersistentState<WordLists>('tinytype.words', WORDS)
   const [order, setOrder] = usePersistentState<Order>('tinytype.order', 'inOrder')
@@ -33,9 +36,12 @@ export default function App() {
   const [confetti, setConfetti] = usePersistentState('tinytype.confetti', true)
   const [winSound, setWinSound] = usePersistentState('tinytype.winSound', true)
   const [letterSounds, setLetterSounds] = usePersistentState('tinytype.letterSounds', true)
+  const [oopsSound, setOopsSound] = usePersistentState('tinytype.oopsSound', true)
   const [sayWordAtEnd, setSayWordAtEnd] = usePersistentState('tinytype.sayWord', true)
   const [pictures, setPictures] = usePersistentState('tinytype.pictures', true)
   const [customPictures, setCustomPictures] = usePersistentState<CustomPictures>('tinytype.customPictures', {})
+
+  const mode: Mode = FREE_PLAY ? savedMode : 'copy'
 
   // Reset on every visit.
   // Endless play starts somewhere new each time.
@@ -47,6 +53,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [recorderOpen, setRecorderOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const touch = useTouchScreen()
 
   // Find out which recorded letter sounds ship with the app.
@@ -132,7 +139,7 @@ export default function App() {
   useEffect(() => {
     // Returns true if TinyType used the key, so the browser shouldn't.
     function handle(key: string): boolean {
-      if (settingsOpen || recorderOpen || feedbackOpen) return false
+      if (settingsOpen || recorderOpen || feedbackOpen || pickerOpen) return false
 
       if (key === 'Enter') {
         speakWord(word, language)
@@ -155,12 +162,16 @@ export default function App() {
         setTyped((t) => t.slice(0, -1))
         return true
       }
-      // Space would scroll the page.
-      if (!isLetter(key)) return key === ' '
+      // Space: a spoken hint, the next letter's sound (it would otherwise scroll the page).
+      if (key === ' ') {
+        if (!full) speakLetter([...word][typed.length], language)
+        return true
+      }
+      if (!isLetter(key)) return false
 
       // Every slot is filled but something's wrong: Backspace is the way out.
       if (full) {
-        playOops()
+        if (oopsSound) playOops()
         return true
       }
 
@@ -176,10 +187,10 @@ export default function App() {
       } else if (mode === 'free') {
         // Free play keeps the wrong letter on screen, so the child can delete it and try again.
         setTyped((t) => [...t, { char, colour, correct }])
-        playOops()
+        if (oopsSound) playOops()
       } else {
         setWrong({ char, id: Date.now() })
-        playOops()
+        if (oopsSound) playOops()
       }
       return true
     }
@@ -197,7 +208,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
     // nextWord and previousWord are covered by the values they read: currentIndex, words, order and history.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsOpen, recorderOpen, feedbackOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, currentIndex, words, order, history])
+  }, [settingsOpen, recorderOpen, feedbackOpen, pickerOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history])
 
   // Clear a wrong letter after its wobble.
   useEffect(() => {
@@ -229,8 +240,9 @@ export default function App() {
         language={language}
         onLanguageChange={changeLanguage}
         mode={mode}
-        onModeChange={setMode}
+        onModeChange={FREE_PLAY ? setMode : undefined}
         onNextWord={nextWord}
+        onOpenWordPicker={() => setPickerOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenFeedback={() => setFeedbackOpen(true)}
       />
@@ -301,6 +313,8 @@ export default function App() {
           onWinSoundChange={setWinSound}
           letterSounds={letterSounds}
           onLetterSoundsChange={setLetterSounds}
+          oopsSound={oopsSound}
+          onOopsSoundChange={setOopsSound}
           sayWord={sayWordAtEnd}
           onSayWordChange={setSayWordAtEnd}
           pictures={pictures}
@@ -314,6 +328,32 @@ export default function App() {
       )}
 
       {recorderOpen && <Recorder language={language} onClose={() => setRecorderOpen(false)} />}
+      {pickerOpen && (
+        <WordPicker
+          words={words}
+          currentIndex={endless ? -1 : currentIndex}
+          onPick={(i) => {
+            if (endless) {
+              // Picking one of your own words leaves endless play, as in Settings.
+              setOrder('random')
+              setHistory([])
+            } else {
+              setHistory((h) => [...h, currentIndex].slice(-50))
+            }
+            goToWord(i)
+            setPickerOpen(false)
+          }}
+          endlessWords={endless ? playList : undefined}
+          endlessIndex={currentIndex}
+          onPickEndless={(i) => {
+            setHistory((h) => [...h, currentIndex].slice(-50))
+            goToWord(i)
+            setPickerOpen(false)
+          }}
+          pictureOf={(w) => pictureFor(w, customPictures)}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
       {feedbackOpen && <Feedback language={language} onClose={() => setFeedbackOpen(false)} />}
     </div>
   )
