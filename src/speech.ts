@@ -53,14 +53,24 @@ function say(text: string, language: Language, interrupt: boolean) {
   speechSynthesis.speak(utterance)
 }
 
+// Numbers for counting, written out so the voice reads them as words in its own language.
+const NUMBER_WORDS: Record<Language, string[]> = {
+  en: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'],
+  it: ['zero', 'uno', 'due', 'tre', 'quattro', 'cinque', 'sei', 'sette', 'otto', 'nove'],
+}
+
+function numberWord(text: string, language: Language): string | undefined {
+  return /^\d+$/.test(text) ? NUMBER_WORDS[language][Number(text)] : undefined
+}
+
 export function speakWord(word: string, language: Language, { interrupt = true } = {}) {
   // Lowercase so "MOM" is read as a word, not spelled out as an acronym.
-  say(word.toLowerCase(), language, interrupt)
+  say(numberWord(word, language) ?? word.toLowerCase(), language, interrupt)
 }
 
 export function speakLetter(letter: string, language: Language) {
   const base = baseLetter(letter)
   // A recorded clip, if there is one; the computer voice otherwise.
   if (playClip(language, base)) return
-  say(LETTER_SOUNDS[language][base] ?? base.toLowerCase(), language, true)
+  say(LETTER_SOUNDS[language][base] ?? numberWord(base, language) ?? base.toLowerCase(), language, true)
 }

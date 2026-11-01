@@ -9,23 +9,32 @@ import { WordPicker } from './components/WordPicker'
 import { Toolbar, type Mode } from './components/Toolbar'
 import { WordRows, type TypedLetter, type WrongLetter } from './components/WordRows'
 import { Recorder } from './components/Recorder'
+import { CountPicker } from './components/CountPicker'
+import { Objects } from './components/Objects'
+import { HOW_MANY, MAX_COUNT, nextCount, nextThing, randomCount, randomThing, type Game } from './counting'
 import { loadClipIndex } from './letterClips'
 import { pictureFor, type CustomPictures } from './pictures'
 import { playOops, playWin } from './sounds'
 import { speakLetter, speakWord } from './speech'
 import { usePersistentState } from './usePersistentState'
 import { useTouchScreen } from './useTouchScreen'
-import { ENDLESS_WORDS, WORDS, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
+import { ENDLESS_WORDS, WORDS, isDigit, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
 
 const WRONG_LETTER_MS = 700
 const CELEBRATION_MS = 3200
 const SAY_WORD_DELAY_MS = 1000
+// Counting aloud waits this long between numbers, so fast presses don't talk over each other.
+const COUNT_GAP_MS = 1000
 // Free play is hidden for now: everyone plays Copy. Set to true to bring the toolbar buttons back.
 const FREE_PLAY = false
 
 export default function App() {
   // Remembered between visits.
   const [language, setLanguage] = usePersistentState<Language>('tinytype.language', 'en')
+  const [game, setGame] = usePersistentState<Game>('tinytype.game', 'letters')
+  // Counting: a fixed number and picture, or null for a random one each round.
+  const [countChoice, setCountChoice] = usePersistentState<number | null>('tinytype.countNumber', null)
+  const [thingChoice, setThingChoice] = usePersistentState<string | null>('tinytype.countThing', null)
   const [savedMode, setMode] = usePersistentState<Mode>('tinytype.mode', 'copy')
   const [colour, setColour] = usePersistentState('tinytype.colour', COLOURS[4])
   const [wordLists, setWordLists] = usePersistentState<WordLists>('tinytype.words', WORDS)
@@ -48,12 +57,18 @@ export default function App() {
   const [wordIndex, setWordIndex] = useState(() => (order === 'endless' ? Math.floor(Math.random() * ENDLESS_WORDS[language].length) : 0))
   const [round, setRound] = useState(0) // how many times the current word has been finished
   const [history, setHistory] = useState<number[]>([]) // words shown before this one, for ←
+  // Counting: how many things, which thing, and how many have been counted aloud as a hint.
+  const [count, setCount] = useState(() => countChoice ?? randomCount())
+  const [thing, setThing] = useState(() => thingChoice ?? randomThing())
+  const [counted, setCounted] = useState(0)
+  const lastCountedAt = useRef(0)
   const [typed, setTyped] = useState<TypedLetter[]>([])
   const [wrong, setWrong] = useState<WrongLetter | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [recorderOpen, setRecorderOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [countPickerOpen, setCountPickerOpen] = useState(false)
   const touch = useTouchScreen()
 
   // Find out which recorded letter sounds ship with the app.
@@ -66,7 +81,9 @@ export default function App() {
   const endless = order === 'endless'
   const playList = endless ? ENDLESS_WORDS[language] : words
   const currentIndex = wordIndex % playList.length
-  const word = playList[currentIndex]
+  // Counting reuses the typing game: the "word" is the number, typed with the number keys.
+  const counting = game === 'numbers'
+  const word = counting ? String(count) : playList[currentIndex]
   const full = typed.length === [...word].length
   const done = full && typed.every((letter) => letter.correct)
   const picture = pictureFor(word, customPictures)
@@ -78,7 +95,49 @@ export default function App() {
     setWrong(null)
   }
 
+  function startCountRound(n: number, t: string) {
+    setCount(n)
+    setThing(t)
+    setCounted(0)
+    setTyped([])
+    setWrong(null)
+  }
+
+  // The next round: the chosen number and picture, or new random ones.
+  function nextCountRound() {
+    startCountRound(countChoice ?? nextCount(count), thingChoice ?? nextThing(thing))
+  }
+
+  // ← and →: one fewer or one more of the same thing, stopping at 1 and 9.
+  function stepCount(step: number) {
+    const n = Math.min(Math.max(count + step, 1), MAX_COUNT)
+    if (n !== count) startCountRound(n, thing)
+  }
+
+  // Space, or tapping a thing: count them aloud one at a time, starting again after the last.
+  function countAloud() {
+    // Presses during the previous number are ignored.
+    if (Date.now() - lastCountedAt.current < COUNT_GAP_MS) return
+    lastCountedAt.current = Date.now()
+    const n = counted >= count ? 1 : counted + 1
+    setCounted(n)
+    speakWord(String(n), language)
+  }
+
+  // 🔊 and Enter: the word, or "How many?" when counting.
+  function sayPrompt() {
+    speakWord(counting ? HOW_MANY[language] : word, language)
+  }
+
+  function changeGame(next: Game) {
+    setGame(next)
+    setTyped([])
+    setWrong(null)
+    setCounted(0)
+  }
+
   function nextWord() {
+    if (counting) return nextCountRound()
     setHistory((h) => [...h, currentIndex].slice(-50))
     goToWord(nextIndex(currentIndex, playList.length, order))
   }
@@ -94,7 +153,9 @@ export default function App() {
   }
 
   // After a finished word: the same word again until it's been done `repeats` times.
+  // Counting always moves on to a new number.
   function finishWord() {
+    if (counting) return nextCountRound()
     if (round + 1 < repeats) {
       setRound(round + 1)
       setTyped([])
@@ -139,10 +200,10 @@ export default function App() {
   useEffect(() => {
     // Returns true if TinyType used the key, so the browser shouldn't.
     function handle(key: string): boolean {
-      if (settingsOpen || recorderOpen || feedbackOpen || pickerOpen) return false
+      if (settingsOpen || recorderOpen || feedbackOpen || pickerOpen || countPickerOpen) return false
 
       if (key === 'Enter') {
-        speakWord(word, language)
+        sayPrompt()
         return true
       }
       // Up and down move through the colour picker, stopping at the top and bottom.
@@ -150,9 +211,10 @@ export default function App() {
         setColour(stepColour(colour, key === 'ArrowDown' ? 1 : -1))
         return true
       }
-      // Left and right move between words.
+      // Left and right move between words, or between numbers when counting.
       if (key === 'ArrowRight' || key === 'ArrowLeft') {
-        if (key === 'ArrowRight') nextWord()
+        if (counting) stepCount(key === 'ArrowRight' ? 1 : -1)
+        else if (key === 'ArrowRight') nextWord()
         else previousWord()
         return true
       }
@@ -162,12 +224,13 @@ export default function App() {
         setTyped((t) => t.slice(0, -1))
         return true
       }
-      // Space: a spoken hint, the next letter's sound (it would otherwise scroll the page).
+      // Space: a spoken hint, the next letter's sound or counting the next thing (it would otherwise scroll the page).
       if (key === ' ') {
-        if (!full) speakLetter([...word][typed.length], language)
+        if (counting) countAloud()
+        else if (!full) speakLetter([...word][typed.length], language)
         return true
       }
-      if (!isLetter(key)) return false
+      if (!(counting ? isDigit(key) : isLetter(key))) return false
 
       // Every slot is filled but something's wrong: Backspace is the way out.
       if (full) {
@@ -206,9 +269,9 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-    // nextWord and previousWord are covered by the values they read: currentIndex, words, order and history.
+    // nextWord, previousWord, stepCount and countAloud are covered by the values they read: currentIndex, words, order, history, count, thing and counted.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsOpen, recorderOpen, feedbackOpen, pickerOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history])
+  }, [settingsOpen, recorderOpen, feedbackOpen, pickerOpen, countPickerOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history, counting, count, thing, counted])
 
   // Clear a wrong letter after its wobble.
   useEffect(() => {
@@ -239,34 +302,47 @@ export default function App() {
       <Toolbar
         language={language}
         onLanguageChange={changeLanguage}
+        game={game}
+        onGameChange={changeGame}
         mode={mode}
         onModeChange={FREE_PLAY ? setMode : undefined}
         onNextWord={nextWord}
         onOpenWordPicker={() => setPickerOpen(true)}
+        onOpenCountPicker={() => setCountPickerOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenFeedback={() => setFeedbackOpen(true)}
       />
       <main className="stage">
-        <div className="play">
+        <div className={counting ? 'play counting' : 'play'}>
           <button
             className="speak"
-            aria-label="Say the word"
+            aria-label={counting ? 'Ask how many' : 'Say the word'}
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => speakWord(word, language)}
+            onClick={sayPrompt}
           >
             🔊
           </button>
+          {counting && <Objects key={`${thing}-${count}`} thing={thing} count={count} counted={counted} onTap={countAloud} />}
           <div className="rows-area">
-            <WordRows word={word} typed={typed} wrong={wrong} colour={colour} done={done} hints={hints} boxes={boxes} />
-            {touch && <TouchInput onKey={(key) => handleKey.current(key)} />}
+            <WordRows
+              word={word}
+              typed={typed}
+              wrong={wrong}
+              colour={colour}
+              done={done}
+              hints={hints && !counting}
+              boxes={boxes}
+              hidden={counting}
+            />
+            {touch && <TouchInput onKey={(key) => handleKey.current(key)} numeric={counting} />}
           </div>
-          {pictures && picture && (
+          {!counting && pictures && picture && (
             <div key={word} className="picture" aria-hidden="true">
               {picture}
             </div>
           )}
         </div>
-        {repeats > 1 && (
+        {repeats > 1 && !counting && (
           <div className="rounds" aria-label={`${roundsShown} of ${repeats}`}>
             {Array.from({ length: repeats }, (_, i) => (
               <span key={i} className={i < roundsShown ? 'round filled' : 'round'} />
@@ -291,8 +367,9 @@ export default function App() {
           pictureOf={(w) => pictureFor(w, customPictures)}
           onRemoveWord={removeWord}
           onPickWord={(i) => {
-            // Picking one of your own words leaves endless play.
+            // Picking one of your own words leaves endless play, and counting.
             if (endless) setOrder('random')
+            if (counting) changeGame('letters')
             goToWord(i)
           }}
           onResetWords={() => {
@@ -352,6 +429,22 @@ export default function App() {
           }}
           pictureOf={(w) => pictureFor(w, customPictures)}
           onClose={() => setPickerOpen(false)}
+        />
+      )}
+      {countPickerOpen && (
+        <CountPicker
+          number={countChoice}
+          thing={thingChoice}
+          // Picking shows it straight away; 🎲 keeps what's on screen until the next round.
+          onNumberChange={(n) => {
+            setCountChoice(n)
+            if (n !== null) startCountRound(n, thing)
+          }}
+          onThingChange={(t) => {
+            setThingChoice(t)
+            if (t !== null) startCountRound(count, t)
+          }}
+          onClose={() => setCountPickerOpen(false)}
         />
       )}
       {feedbackOpen && <Feedback language={language} onClose={() => setFeedbackOpen(false)} />}

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { Game } from '../counting'
 import type { Language } from '../words'
 
 export type Mode = 'copy' | 'free'
@@ -6,16 +7,19 @@ export type Mode = 'copy' | 'free'
 type Props = {
   language: Language
   onLanguageChange: (language: Language) => void
+  game: Game
+  onGameChange: (game: Game) => void
   mode: Mode
   onModeChange?: (mode: Mode) => void // left out to hide the Copy / Free play buttons
   onNextWord: () => void
   onOpenWordPicker: () => void
+  onOpenCountPicker: () => void
   onOpenSettings: () => void
   onOpenFeedback: () => void
 }
 
 // Small grown-up controls in the corner.
-export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNextWord, onOpenWordPicker, onOpenSettings, onOpenFeedback }: Props) {
+export function Toolbar({ language, onLanguageChange, game, onGameChange, mode, onModeChange, onNextWord, onOpenWordPicker, onOpenCountPicker, onOpenSettings, onOpenFeedback }: Props) {
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen()
     else document.documentElement.requestFullscreen()
@@ -29,7 +33,14 @@ export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNext
       <ToolButton active={language === 'it'} onClick={() => onLanguageChange('it')}>
         🇮🇹 IT
       </ToolButton>
-      {onModeChange && (
+      <span className="divider" />
+      <ToolButton active={game === 'letters'} onClick={() => onGameChange('letters')}>
+        ABC
+      </ToolButton>
+      <ToolButton active={game === 'numbers'} onClick={() => onGameChange('numbers')}>
+        123
+      </ToolButton>
+      {onModeChange && game === 'letters' && (
         <>
           <span className="divider" />
           <ToolButton active={mode === 'copy'} onClick={() => onModeChange('copy')}>
@@ -41,8 +52,12 @@ export function Toolbar({ language, onLanguageChange, mode, onModeChange, onNext
         </>
       )}
       <span className="divider" />
-      <ToolButton onClick={onOpenWordPicker}>🔤 Words</ToolButton>
-      <ToolButton onClick={onNextWord}>Next word →</ToolButton>
+      {game === 'letters' ? (
+        <ToolButton onClick={onOpenWordPicker}>🔤 Words</ToolButton>
+      ) : (
+        <ToolButton onClick={onOpenCountPicker}>🎯 Pick</ToolButton>
+      )}
+      <ToolButton onClick={onNextWord}>{game === 'letters' ? 'Next word →' : 'Next →'}</ToolButton>
       {/* iPhones can't go full screen from a web page. */}
       {document.fullscreenEnabled && <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>}
       <ToolButton onClick={onOpenSettings}>⚙ Settings</ToolButton>

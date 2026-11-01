@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from 'react'
 // The box always holds this, so Backspace has something to delete and shows up as a change.
 const FILLER = ' '
 
-export function TouchInput({ onKey }: { onKey: (key: string) => void }) {
+// `numeric` asks for the number keyboard, for counting.
+export function TouchInput({ onKey, numeric = false }: { onKey: (key: string) => void; numeric?: boolean }) {
   const input = useRef<HTMLInputElement>(null)
   const [focused, setFocused] = useState(false)
 
@@ -48,6 +49,7 @@ export function TouchInput({ onKey }: { onKey: (key: string) => void }) {
         className="touch-input"
         aria-label="Type here"
         defaultValue={FILLER}
+        inputMode={numeric ? 'numeric' : undefined}
         autoCapitalize="characters"
         autoCorrect="off"
         autoComplete="off"

@@ -40,6 +40,10 @@ export function isLetter(key: string): boolean {
   return /^\p{L}$/u.test(key)
 }
 
+export function isDigit(key: string): boolean {
+  return /^[0-9]$/.test(key)
+}
+
 // Turns whatever a parent typed into a word the game can use: capitals, letters only.
 export function cleanWord(text: string): string {
   return text.toUpperCase().replace(/[^\p{L}]/gu, '').slice(0, 12)

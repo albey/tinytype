@@ -12,10 +12,11 @@ type Props = {
   done: boolean
   hints: boolean // show the letter to type, in light grey, in each empty slot
   boxes: boolean // draw a box round each letter and its slot
+  hidden?: boolean // counting: just the slot, the answer isn't shown
 }
 
 // One column per letter: the letter to copy on top, its slot underneath.
-export function WordRows({ word, typed, wrong, colour, done, hints, boxes }: Props) {
+export function WordRows({ word, typed, wrong, colour, done, hints, boxes, hidden = false }: Props) {
   const letters = [...word]
   const style = {
     '--letters': letters.length,
@@ -31,7 +32,7 @@ export function WordRows({ word, typed, wrong, colour, done, hints, boxes }: Pro
         const isCurrent = i === typed.length
         return (
           <div key={i} className="column">
-            <div className="slot prompt">{target}</div>
+            {!hidden && <div className="slot prompt">{target}</div>}
             <div className={isCurrent ? 'slot answer current' : 'slot answer'}>
               {letter && (
                 <span
@@ -54,7 +55,7 @@ export function WordRows({ word, typed, wrong, colour, done, hints, boxes }: Pro
                 </span>
               )}
               {/* The cursor: the letter to type, faint and gently blinking. */}
-              {isCurrent && !wrong && <span className="cursor-letter">{target}</span>}
+              {isCurrent && !wrong && !hidden && <span className="cursor-letter">{target}</span>}
             </div>
           </div>
         )
