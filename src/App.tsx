@@ -16,9 +16,10 @@ import { loadClipIndex } from './letterClips'
 import { pictureFor, type CustomPictures } from './pictures'
 import { playOops, playWin } from './sounds'
 import { speakLetter, speakWord } from './speech'
+import { elapsed, recordCorrect, recordWrong, startTimer } from './stats'
 import { usePersistentState } from './usePersistentState'
 import { useTouchScreen } from './useTouchScreen'
-import { ENDLESS_WORDS, WORDS, isDigit, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
+import { ENDLESS_WORDS, WORDS, baseLetter, isDigit, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
 
 const WRONG_LETTER_MS = 700
 const CELEBRATION_MS = 3200
@@ -62,6 +63,8 @@ export default function App() {
   const [thing, setThing] = useState(() => thingChoice ?? randomThing())
   const [counted, setCounted] = useState(0)
   const lastCountedAt = useRef(0)
+  // Stats: whether a spoken hint was used for the letter or number being answered.
+  const helped = useRef(false)
   const [typed, setTyped] = useState<TypedLetter[]>([])
   const [wrong, setWrong] = useState<WrongLetter | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -116,6 +119,7 @@ export default function App() {
 
   // Space, or tapping a thing: count them aloud one at a time, starting again after the last.
   function countAloud() {
+    helped.current = true
     // Presses during the previous number are ignored.
     if (Date.now() - lastCountedAt.current < COUNT_GAP_MS) return
     lastCountedAt.current = Date.now()
@@ -123,6 +127,30 @@ export default function App() {
     setCounted(n)
     speakWord(String(n), language)
   }
+
+  // Stats: every answer, right or wrong, and how long the right ones took.
+  function recordAnswer(correct: boolean, expected: string, pressed: string) {
+    if (counting) {
+      if (correct) {
+        recordCorrect('numbers', expected, elapsed(), helped.current)
+        recordCorrect('things', thing, elapsed(), helped.current)
+      } else {
+        recordWrong('numbers', expected, pressed)
+        recordWrong('things', thing, pressed)
+      }
+    } else if (correct) {
+      // The first letter's time includes looking at the word, so it isn't timed.
+      recordCorrect('letters', baseLetter(expected), typed.length === 0 ? null : elapsed(), helped.current)
+    } else {
+      recordWrong('letters', baseLetter(expected), baseLetter(pressed))
+    }
+  }
+
+  // The clock for each letter or number starts when it becomes the next one to type.
+  useEffect(() => {
+    startTimer()
+    helped.current = false
+  }, [word, typed.length, round, counting])
 
   // 🔊 and Enter: the word, or "How many?" when counting.
   function sayPrompt() {
@@ -227,7 +255,10 @@ export default function App() {
       // Space: a spoken hint, the next letter's sound or counting the next thing (it would otherwise scroll the page).
       if (key === ' ') {
         if (counting) countAloud()
-        else if (!full) speakLetter([...word][typed.length], language)
+        else if (!full) {
+          speakLetter([...word][typed.length], language)
+          helped.current = true
+        }
         return true
       }
       if (!(counting ? isDigit(key) : isLetter(key))) return false
@@ -242,11 +273,13 @@ export default function App() {
       const correct = sameLetter(key, expected)
       // Show the word's own letter, so a plain A typed for À appears as À.
       const char = correct ? expected : key.toUpperCase()
+      recordAnswer(correct, expected, key)
 
       if (correct) {
         setTyped((t) => [...t, { char, colour, correct }])
         setWrong(null)
-        if (letterSounds) speakLetter(char, language)
+        // Counting says its answer once, when the round is won (below).
+        if (letterSounds && !counting) speakLetter(char, language)
       } else if (mode === 'free') {
         // Free play keeps the wrong letter on screen, so the child can delete it and try again.
         setTyped((t) => [...t, { char, colour, correct }])
@@ -269,7 +302,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-    // nextWord, previousWord, stepCount and countAloud are covered by the values they read: currentIndex, words, order, history, count, thing and counted.
+    // nextWord, previousWord, stepCount, countAloud and recordAnswer are covered by the values they read: currentIndex, words, order, history, count, thing and counted.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [settingsOpen, recorderOpen, feedbackOpen, pickerOpen, countPickerOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history, counting, count, thing, counted])
 
@@ -284,8 +317,11 @@ export default function App() {
   useEffect(() => {
     if (!done) return
     if (winSound) playWin()
-    // Wait a moment, so the word doesn't talk over the last letter's sound.
-    const sayTimer = sayWordAtEnd ? setTimeout(() => speakWord(word, language, { interrupt: false }), SAY_WORD_DELAY_MS) : undefined
+    // Wait a moment, so the word doesn't talk over the last letter's sound. Counting's answer is a
+    // single digit with no key sound of its own, so it's said straight away, with either switch on.
+    const say = counting ? sayWordAtEnd || letterSounds : sayWordAtEnd
+    const delay = counting ? 0 : SAY_WORD_DELAY_MS
+    const sayTimer = say ? setTimeout(() => speakWord(word, language, { interrupt: false }), delay) : undefined
     const timer = setTimeout(finishWord, CELEBRATION_MS)
     return () => {
       clearTimeout(sayTimer)
