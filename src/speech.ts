@@ -64,6 +64,8 @@ function numberWord(text: string, language: Language): string | undefined {
 }
 
 export function speakWord(word: string, language: Language, { interrupt = true } = {}) {
+  // A number: the recorded clip, if there is one.
+  if (numberWord(word, language) && playClip(language, word)) return
   // Lowercase so "MOM" is read as a word, not spelled out as an acronym.
   say(numberWord(word, language) ?? word.toLowerCase(), language, interrupt)
 }

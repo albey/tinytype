@@ -5,6 +5,8 @@ export type Game = 'letters' | 'numbers'
 
 // Up to 9, so every answer is a single key.
 export const MAX_COUNT = 9
+// The answers as text: what's typed, spoken and recorded.
+export const COUNT_NUMBERS = Array.from({ length: MAX_COUNT }, (_, i) => String(i + 1))
 
 // Things to count: easy to tell apart and nice in a row. Emoji only, so they work in both languages.
 export const THINGS = [

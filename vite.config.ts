@@ -5,7 +5,7 @@ import { defineConfig, type Plugin } from 'vite'
 
 const SOUNDS = join(import.meta.dirname, 'public/sounds')
 
-// Only while running `npm run dev`: lets the letter-sound recorder save clips into public/sounds,
+// Only while running `npm run dev`: lets the sound recorder save letter and number clips into public/sounds,
 // so they ship with the app. PUT /__sounds/en/M saves a WAV, DELETE removes it.
 // public/sounds/index.json lists what exists, so the app knows which clips to play.
 function letterSoundRecorder(): Plugin {
@@ -14,10 +14,10 @@ function letterSoundRecorder(): Plugin {
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use('/__sounds', async (req, res) => {
-        const match = req.url?.match(/^\/(en|it)\/([A-Z])$/)
+        const match = req.url?.match(/^\/(en|it)\/([A-Z1-9])$/)
         if (!match || (req.method !== 'PUT' && req.method !== 'DELETE')) {
           res.statusCode = 400
-          res.end('expected PUT or DELETE /__sounds/<en|it>/<LETTER>')
+          res.end('expected PUT or DELETE /__sounds/<en|it>/<LETTER or 1-9>')
           return
         }
         const [, lang, letter] = match

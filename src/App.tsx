@@ -12,8 +12,8 @@ import { Recorder } from './components/Recorder'
 import { CountPicker } from './components/CountPicker'
 import { Objects } from './components/Objects'
 import { StatsPanel } from './components/StatsPanel'
-import { HOW_MANY, MAX_COUNT, nextCount, nextThing, randomCount, randomThing, type Game } from './counting'
-import { loadClipIndex } from './letterClips'
+import { COUNT_NUMBERS, HOW_MANY, MAX_COUNT, nextCount, nextThing, randomCount, randomThing, type Game } from './counting'
+import { hasClip, loadClipIndex, preloadClips } from './letterClips'
 import { pictureFor, type CustomPictures } from './pictures'
 import { playOops, playWin } from './sounds'
 import { speakLetter, speakWord } from './speech'
@@ -64,6 +64,8 @@ export default function App() {
   const [thing, setThing] = useState(() => thingChoice ?? randomThing())
   const [counted, setCounted] = useState(0)
   const lastCountedAt = useRef(0)
+  // `counted` as of the last press, for presses that come faster than React redraws.
+  const countedNow = useRef(0)
   // Stats: whether a spoken hint was used for the letter or number being answered.
   const helped = useRef(false)
   const [typed, setTyped] = useState<TypedLetter[]>([])
@@ -78,8 +80,10 @@ export default function App() {
 
   // Find out which recorded letter sounds ship with the app.
   useEffect(() => {
-    loadClipIndex()
+    loadClipIndex().then(() => preloadClips(language, COUNT_NUMBERS))
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  useEffect(() => preloadClips(language, COUNT_NUMBERS), [language])
 
   const words = wordLists[language]
   // Endless play draws from the built-in list instead of the parent's.
@@ -104,6 +108,7 @@ export default function App() {
     setCount(n)
     setThing(t)
     setCounted(0)
+    countedNow.current = 0
     setTyped([])
     setWrong(null)
   }
@@ -120,12 +125,15 @@ export default function App() {
   }
 
   // Space, or tapping a thing: count them aloud one at a time, starting again after the last.
+  // With recorded numbers it goes as fast as the player, each number cutting off the one before.
+  // The computer voice drops words when cut off quickly, so without a clip presses close together are ignored.
   function countAloud() {
     helped.current = true
-    // Presses during the previous number are ignored.
-    if (Date.now() - lastCountedAt.current < COUNT_GAP_MS) return
+    const n = countedNow.current >= count ? 1 : countedNow.current + 1
+    const clip = hasClip(language, String(n))
+    if (!clip && Date.now() - lastCountedAt.current < COUNT_GAP_MS) return
     lastCountedAt.current = Date.now()
-    const n = counted >= count ? 1 : counted + 1
+    countedNow.current = n
     setCounted(n)
     speakWord(String(n), language)
   }
@@ -164,6 +172,7 @@ export default function App() {
     setTyped([])
     setWrong(null)
     setCounted(0)
+    countedNow.current = 0
   }
 
   function nextWord() {

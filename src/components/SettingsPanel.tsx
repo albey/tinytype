@@ -150,7 +150,7 @@ export function SettingsPanel(props: Props) {
           {/* Recording saves into the app's files, so it's only offered when running locally with `npm run dev`. */}
           {import.meta.env.DEV && (
             <button className="tool record-button" onClick={props.onOpenRecorder}>
-              🎙 Record letter sounds ({LANGUAGE_NAMES[language]})
+              🎙 Record letter & number sounds ({LANGUAGE_NAMES[language]})
             </button>
           )}
           <Toggle

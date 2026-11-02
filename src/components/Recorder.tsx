@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
+import { COUNT_NUMBERS } from '../counting'
 import { clipUrl, hasClip, setClipIndex } from '../letterClips'
 import { LETTER_HINTS } from '../letterHints'
 import { tidyRecording } from '../recording'
 import type { Language } from '../words'
 
 const ALPHABET = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
+// Letters first, then the numbers for counting; ← → go through them all.
+const ITEMS = [...ALPHABET, ...COUNT_NUMBERS]
+// What to say for each number.
+const NUMBER_HINTS: Record<Language, string[]> = {
+  en: ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'],
+  it: ['uno', 'due', 'tre', 'quattro', 'cinque', 'sei', 'sette', 'otto', 'nove'],
+}
 const LANGUAGE_NAMES: Record<Language, string> = { en: 'English', it: 'Italian' }
 
 type Props = {
@@ -14,7 +22,7 @@ type Props = {
 
 type Status = 'idle' | 'recording' | 'saving' | 'saved' | 'error'
 
-// Record your own letter sounds: hold Space to record, let go to stop; ← → change letter.
+// Record your own letter and number sounds: hold Space to record, let go to stop; ← → change letter.
 // Saving into the app only works under `npm run dev` (see vite.config.ts).
 export function Recorder({ language, onClose }: Props) {
   const [index, setIndex] = useState(0)
@@ -24,7 +32,8 @@ export function Recorder({ language, onClose }: Props) {
   const recorder = useRef<MediaRecorder | null>(null)
   const starting = useRef(false) // the microphone takes a moment to start
   const stopWhenStarted = useRef(false) // Space was let go before it had
-  const letter = ALPHABET[index]
+  const letter = ITEMS[index]
+  const isNumber = COUNT_NUMBERS.includes(letter)
   const canSave = import.meta.env.DEV
 
   // Clips recorded in this session, played from memory: the dev server may not serve a new file straight away.
@@ -53,7 +62,7 @@ export function Recorder({ language, onClose }: Props) {
             wav = await tidyRecording(new Blob(chunks, { type: rec.mimeType }))
           } catch (error) {
             // A quick tap leaves too little to decode.
-            throw new Error((error as Error).message.includes('silent') ? (error as Error).message : 'Too short. Hold Space while you say the sound.')
+            throw new Error((error as Error).message.includes('silent') ? (error as Error).message : 'Too short. Hold Space while you speak.')
           }
           const response = await fetch(`/__sounds/${language}/${letter}`, { method: 'PUT', body: wav })
           if (!response.ok) throw new Error('Saving failed. Is TinyType running with npm run dev?')
@@ -95,7 +104,7 @@ export function Recorder({ language, onClose }: Props) {
 
   function goTo(i: number) {
     if (recorder.current) return
-    setIndex(Math.max(0, Math.min(ALPHABET.length - 1, i)))
+    setIndex(Math.max(0, Math.min(ITEMS.length - 1, i)))
     setStatus('idle')
     setMessage('')
   }
@@ -133,14 +142,25 @@ export function Recorder({ language, onClose }: Props) {
   }, [])
 
   const recorded = hasClip(language, letter)
-  const done = ALPHABET.filter((l) => hasClip(language, l)).length
+  const letters = ALPHABET.filter((l) => hasClip(language, l)).length
+  const numbers = COUNT_NUMBERS.filter((n) => hasClip(language, n)).length
+
+  const gridButton = (item: string, i: number) => (
+    <button
+      key={item}
+      className={[i === index && 'current', hasClip(language, item) && 'has-clip'].filter(Boolean).join(' ')}
+      onClick={() => goTo(i)}
+    >
+      {item}
+    </button>
+  )
 
   return (
     <div className="recorder">
       <header>
-        <h2>Record letter sounds · {LANGUAGE_NAMES[language]}</h2>
+        <h2>Record sounds · {LANGUAGE_NAMES[language]}</h2>
         <span className="hint">
-          {done} of 26 recorded
+          {letters} of 26 letters · {numbers} of {COUNT_NUMBERS.length} numbers
         </span>
         <button className="tool" onClick={onClose}>
           Done
@@ -155,18 +175,18 @@ export function Recorder({ language, onClose }: Props) {
       )}
 
       <div className="recorder-main">
-        <button className="recorder-arrow" onClick={() => goTo(index - 1)} disabled={index === 0} aria-label="Previous letter">
+        <button className="recorder-arrow" onClick={() => goTo(index - 1)} disabled={index === 0} aria-label="Previous">
           ◀
         </button>
         <div className="recorder-letter">
           <div className={`recorder-big ${status}`}>{letter}</div>
-          <div className="recorder-hint">Say: {LETTER_HINTS[language][letter]}</div>
+          <div className="recorder-hint">Say: {isNumber ? NUMBER_HINTS[language][Number(letter) - 1] : LETTER_HINTS[language][letter]}</div>
           <div className="recorder-status">
             {status === 'recording' && '● Recording… let go of Space to stop'}
             {status === 'saving' && 'Saving…'}
-            {status === 'saved' && '✓ Saved. Listen back; hold Space to redo, → for the next letter'}
+            {status === 'saved' && '✓ Saved. Listen back; hold Space to redo, → for the next one'}
             {status === 'error' && message}
-            {status === 'idle' && (recorded ? '✓ Recorded. Hold Space to record again' : 'Hold Space and say the sound')}
+            {status === 'idle' && (recorded ? '✓ Recorded. Hold Space to record again' : (isNumber ? 'Hold Space and say the number' : 'Hold Space and say the sound'))}
           </div>
           <div className="recorder-actions">
             <button
@@ -189,28 +209,24 @@ export function Recorder({ language, onClose }: Props) {
         <button
           className="recorder-arrow"
           onClick={() => goTo(index + 1)}
-          disabled={index === ALPHABET.length - 1}
-          aria-label="Next letter"
+          disabled={index === ITEMS.length - 1}
+          aria-label="Next"
         >
           ▶
         </button>
       </div>
 
       <div className="recorder-grid">
-        {ALPHABET.map((l, i) => (
-          <button
-            key={l}
-            className={[i === index && 'current', hasClip(language, l) && 'has-clip'].filter(Boolean).join(' ')}
-            onClick={() => goTo(i)}
-          >
-            {l}
-          </button>
-        ))}
+        {ALPHABET.map((l, i) => gridButton(l, i))}
+      </div>
+      <div className="recorder-grid">
+        {COUNT_NUMBERS.map((n, i) => gridButton(n, ALPHABET.length + i))}
       </div>
 
       <p className="hint recorder-tips">
         Tips: a quiet room, about a hand's width from the laptop, the same voice and volume for every letter. Keep
-        b, d, p, t short, with as little "uh" as you can; hold m, s, f, l for about a second.
+        b, d, p, t short, with as little "uh" as you can; hold m, s, f, l for about a second. Say the numbers
+        briskly, the way you'd count out loud together.
       </p>
     </div>
   )

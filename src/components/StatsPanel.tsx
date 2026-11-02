@@ -1,10 +1,9 @@
 import { useState, type CSSProperties } from 'react'
-import { MAX_COUNT } from '../counting'
+import { COUNT_NUMBERS } from '../counting'
 import { MIN_TIMED, getStats, median, resetStats, type Entry, type Group, type Stats } from '../stats'
 
 // Laid out like the keyboard, so slow letters can be spotted by where they are.
 const KEY_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map((row) => [...row])
-const NUMBERS = Array.from({ length: MAX_COUNT }, (_, i) => String(i + 1))
 
 // Typical time, light (faster) to dark (slower): one hue, so darker always means slower.
 const RAMP = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b']
@@ -62,7 +61,7 @@ export function StatsPanel({ onClose }: { onClose: () => void }) {
           {detail('letters')}
 
           <h3>Counting: numbers</h3>
-          <div className="stat-row">{NUMBERS.map((n) => tile('numbers', n))}</div>
+          <div className="stat-row">{COUNT_NUMBERS.map((n) => tile('numbers', n))}</div>
           {detail('numbers')}
 
           <h3>Counting: pictures</h3>
