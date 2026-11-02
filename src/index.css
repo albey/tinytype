@@ -218,10 +218,64 @@ button {
 /* Counting: 🔊 beside the things to count, the answer underneath. */
 .play.counting {
   display: grid;
-  grid-template-areas: 'speak objects' '. rows';
+  grid-template-areas: 'speak objects' '. rows' '. space';
   justify-items: center;
   align-items: center;
-  gap: 4vh 32px;
+  gap: 3vh 32px;
+  margin-top: -4vh;
+}
+
+/* A space-bar key with "1 2 3…": press Space to count the things. */
+.space-hint {
+  grid-area: space;
+  margin-top: 4vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.space-key {
+  width: 132px;
+  height: 40px;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 4px;
+  box-sizing: border-box;
+  border: 2px solid var(--guide);
+  border-bottom-width: 6px;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+/* Gently pulses until it's first used in a round, to get noticed. */
+.space-hint.waiting {
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { transform: scale(1.1); }
+}
+
+.space-hint:active .space-key {
+  border-bottom-width: 2px;
+  transform: translateY(4px);
+}
+
+.space-hint-numbers {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  opacity: 0.55;
 }
 
 .counting .speak {
@@ -695,7 +749,7 @@ button {
   }
 
   .play.counting {
-    grid-template-areas: 'objects objects' 'speak rows';
+    grid-template-areas: 'objects objects' 'speak rows' '. space';
   }
 
   .objects {
@@ -725,9 +779,11 @@ button {
   }
 }
 
-/* The ▲ ▼ keys stand for the keyboard's arrow keys; without a keyboard, tap the colours. */
+/* The ▲ ▼ keys stand for the keyboard's arrow keys; without a keyboard, tap the colours.
+   Likewise the space bar: tap the things to count them. */
 @media (pointer: coarse) {
-  .arrow-key {
+  .arrow-key,
+  .space-hint {
     display: none;
   }
 }
@@ -1051,4 +1107,129 @@ button {
 .count-tiles .word-tile-picture {
   font-size: 34px;
   font-weight: 800;
+}
+
+/* Stats */
+.word-picker.stats {
+  width: min(760px, 100%);
+}
+
+.stat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.stat-ramp {
+  display: flex;
+  gap: 2px;
+}
+
+.stat-ramp span {
+  width: 18px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.stat-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.stat-row {
+  display: flex;
+  gap: 6px;
+}
+
+.stat-row.wrap {
+  flex-wrap: wrap;
+}
+
+/* One key: the letter, its typical time, right ✓ and wrong ✗. */
+.stat-tile {
+  flex: none;
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 5px 2px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Seen, but too few timed answers for a typical time: no shade, dashed. */
+.stat-tile.few {
+  background: #fff;
+  border: 2px dashed var(--guide);
+}
+
+.stat-tile.unseen {
+  background: var(--hint);
+  color: var(--muted);
+}
+
+.stat-tile.current {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.stat-item {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.stat-time {
+  min-height: 1.2em;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stat-counts {
+  min-height: 1.2em;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.legend-swatch {
+  width: 18px;
+  height: 14px;
+  padding: 0;
+  border-radius: 3px;
+  cursor: default;
+}
+
+.stat-detail {
+  margin: 10px 0 4px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--panel);
+  font-size: 14px;
+}
+
+.stat-detail table {
+  margin-top: 6px;
+  border-collapse: collapse;
+}
+
+.stat-detail th {
+  padding: 2px 16px 2px 0;
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  vertical-align: top;
+}
+
+.stats-note {
+  margin-top: 16px;
 }

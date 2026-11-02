@@ -35,6 +35,7 @@ type Props = {
   pictures: boolean
   onPicturesChange: (on: boolean) => void
   onOpenRecorder: () => void
+  onOpenStats: () => void
   onClose: () => void
 }
 
@@ -198,6 +199,14 @@ export function SettingsPanel(props: Props) {
             on={props.confetti}
             onChange={props.onConfettiChange}
           />
+        </section>
+
+        <section>
+          <h3>Stats</h3>
+          <p className="hint">How often each letter and number came up, and how long it took.</p>
+          <button className="tool" onClick={props.onOpenStats}>
+            📊 See stats
+          </button>
         </section>
       </aside>
     </div>

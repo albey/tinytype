@@ -35,7 +35,7 @@ function load(): Stats {
   }
 }
 
-const stats = load()
+let stats = load()
 
 function save() {
   try {
@@ -67,6 +67,22 @@ export function recordWrong(group: Group, item: string, pressed: string) {
 
 export function getStats(): Stats {
   return stats
+}
+
+export function resetStats() {
+  stats = { letters: {}, numbers: {}, things: {} }
+  save()
+}
+
+// Below this many timed answers, a typical time doesn't mean much yet.
+export const MIN_TIMED = 5
+
+// The typical time: the middle one, so a single long pause doesn't skew it.
+export function median(times: number[]): number | null {
+  if (times.length === 0) return null
+  const sorted = [...times].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
 }
 
 // Time on the current letter or number, leaving out time with the tab hidden or the app in the background.

@@ -11,6 +11,7 @@ import { WordRows, type TypedLetter, type WrongLetter } from './components/WordR
 import { Recorder } from './components/Recorder'
 import { CountPicker } from './components/CountPicker'
 import { Objects } from './components/Objects'
+import { StatsPanel } from './components/StatsPanel'
 import { HOW_MANY, MAX_COUNT, nextCount, nextThing, randomCount, randomThing, type Game } from './counting'
 import { loadClipIndex } from './letterClips'
 import { pictureFor, type CustomPictures } from './pictures'
@@ -25,7 +26,7 @@ const WRONG_LETTER_MS = 700
 const CELEBRATION_MS = 3200
 const SAY_WORD_DELAY_MS = 1000
 // Counting aloud waits this long between numbers, so fast presses don't talk over each other.
-const COUNT_GAP_MS = 1000
+const COUNT_GAP_MS = 600
 // Free play is hidden for now: everyone plays Copy. Set to true to bring the toolbar buttons back.
 const FREE_PLAY = false
 
@@ -72,6 +73,7 @@ export default function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [countPickerOpen, setCountPickerOpen] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
   const touch = useTouchScreen()
 
   // Find out which recorded letter sounds ship with the app.
@@ -228,7 +230,7 @@ export default function App() {
   useEffect(() => {
     // Returns true if TinyType used the key, so the browser shouldn't.
     function handle(key: string): boolean {
-      if (settingsOpen || recorderOpen || feedbackOpen || pickerOpen || countPickerOpen) return false
+      if (settingsOpen || recorderOpen || feedbackOpen || pickerOpen || countPickerOpen || statsOpen) return false
 
       if (key === 'Enter') {
         sayPrompt()
@@ -304,7 +306,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
     // nextWord, previousWord, stepCount, countAloud and recordAnswer are covered by the values they read: currentIndex, words, order, history, count, thing and counted.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsOpen, recorderOpen, feedbackOpen, pickerOpen, countPickerOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history, counting, count, thing, counted])
+  }, [settingsOpen, recorderOpen, feedbackOpen, pickerOpen, countPickerOpen, statsOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history, counting, count, thing, counted])
 
   // Clear a wrong letter after its wobble.
   useEffect(() => {
@@ -359,6 +361,14 @@ export default function App() {
             🔊
           </button>
           {counting && <Objects key={`${thing}-${count}`} thing={thing} count={count} counted={counted} onTap={countAloud} />}
+          {counting && (
+            // Drawn like the space bar, so it's clear that Space counts the things; clicking it works too.
+            // It pulses until the first count of the round.
+            <button className={counted === 0 ? 'space-hint waiting' : 'space-hint'} aria-label="Count them (Space)" title="Space: count them" onMouseDown={(e) => e.preventDefault()} onClick={countAloud}>
+              <span className="space-key">␣</span>
+              <span className="space-hint-numbers">1 2 3…</span>
+            </button>
+          )}
           <div className="rows-area">
             <WordRows
               word={word}
@@ -436,11 +446,16 @@ export default function App() {
             setSettingsOpen(false)
             setRecorderOpen(true)
           }}
+          onOpenStats={() => {
+            setSettingsOpen(false)
+            setStatsOpen(true)
+          }}
           onClose={() => setSettingsOpen(false)}
         />
       )}
 
       {recorderOpen && <Recorder language={language} onClose={() => setRecorderOpen(false)} />}
+      {statsOpen && <StatsPanel onClose={() => setStatsOpen(false)} />}
       {pickerOpen && (
         <WordPicker
           words={words}
