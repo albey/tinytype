@@ -6,6 +6,7 @@ import { Feedback } from './components/Feedback'
 import { TouchInput } from './components/TouchInput'
 import { SettingsPanel } from './components/SettingsPanel'
 import { WordPicker } from './components/WordPicker'
+import { HowToPlay } from './components/HowToPlay'
 import { Toolbar, type Mode } from './components/Toolbar'
 import { WordRows, type TypedLetter, type WrongLetter } from './components/WordRows'
 import { Recorder } from './components/Recorder'
@@ -35,8 +36,8 @@ export default function App() {
   const [language, setLanguage] = usePersistentState<Language>('tinytype.language', 'en')
   const [game, setGame] = usePersistentState<Game>('tinytype.game', 'letters')
   // Counting: a fixed number and picture, or null for a random one each round.
-  const [countChoice, setCountChoice] = usePersistentState<number | null>('tinytype.countNumber', null)
-  const [thingChoice, setThingChoice] = usePersistentState<string | null>('tinytype.countThing', null)
+  // Which games' how-to has been seen, so it shows once per game.
+  const [seenHelp, setSeenHelp] = usePersistentState<Partial<Record<Game, boolean>>>('tinytype.seenHelp', {})
   const [savedMode, setMode] = usePersistentState<Mode>('tinytype.mode', 'copy')
   const [colour, setColour] = usePersistentState('tinytype.colour', COLOURS[4])
   const [wordLists, setWordLists] = usePersistentState<WordLists>('tinytype.words', WORDS)
@@ -60,8 +61,11 @@ export default function App() {
   const [round, setRound] = useState(0) // how many times the current word has been finished
   const [history, setHistory] = useState<number[]>([]) // words shown before this one, for ←
   // Counting: how many things, which thing, and how many have been counted aloud as a hint.
-  const [count, setCount] = useState(() => countChoice ?? randomCount())
-  const [thing, setThing] = useState(() => thingChoice ?? randomThing())
+  // 🎯 Pick: a fixed number and/or picture; null = random each round. Back to random on every visit.
+  const [countChoice, setCountChoice] = useState<number | null>(null)
+  const [thingChoice, setThingChoice] = useState<string | null>(null)
+  const [count, setCount] = useState(randomCount)
+  const [thing, setThing] = useState(randomThing)
   const [counted, setCounted] = useState(0)
   const lastCountedAt = useRef(0)
   // `counted` as of the last press, for presses that come faster than React redraws.
@@ -72,6 +76,7 @@ export default function App() {
   const [wrong, setWrong] = useState<WrongLetter | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [recorderOpen, setRecorderOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(() => !seenHelp[game])
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [countPickerOpen, setCountPickerOpen] = useState(false)
@@ -168,6 +173,7 @@ export default function App() {
   }
 
   function changeGame(next: Game) {
+    if (next !== game && !seenHelp[next]) setHelpOpen(true)
     setGame(next)
     setTyped([])
     setWrong(null)
@@ -239,7 +245,7 @@ export default function App() {
   useEffect(() => {
     // Returns true if TinyType used the key, so the browser shouldn't.
     function handle(key: string): boolean {
-      if (settingsOpen || recorderOpen || feedbackOpen || pickerOpen || countPickerOpen || statsOpen) return false
+      if (settingsOpen || recorderOpen || feedbackOpen || pickerOpen || countPickerOpen || statsOpen || helpOpen) return false
 
       if (key === 'Enter') {
         sayPrompt()
@@ -315,7 +321,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
     // nextWord, previousWord, stepCount, countAloud and recordAnswer are covered by the values they read: currentIndex, words, order, history, count, thing and counted.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsOpen, recorderOpen, feedbackOpen, pickerOpen, countPickerOpen, statsOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history, counting, count, thing, counted])
+  }, [settingsOpen, recorderOpen, feedbackOpen, helpOpen, pickerOpen, countPickerOpen, statsOpen, done, full, word, typed.length, mode, colour, setColour, language, letterSounds, oopsSound, currentIndex, words, order, history, counting, count, thing, counted])
 
   // Clear a wrong letter after its wobble.
   useEffect(() => {
@@ -342,6 +348,11 @@ export default function App() {
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [done, word, language])
 
+  function closeHelp() {
+    setHelpOpen(false)
+    setSeenHelp({ ...seenHelp, [game]: true })
+  }
+
   const roundsShown = round + (done ? 1 : 0)
 
   return (
@@ -358,6 +369,7 @@ export default function App() {
         onOpenCountPicker={() => setCountPickerOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenFeedback={() => setFeedbackOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
       />
       <main className="stage">
         <div className={counting ? 'play counting' : 'play'}>
@@ -463,6 +475,17 @@ export default function App() {
         />
       )}
 
+      {helpOpen && (
+        <HowToPlay
+          game={game}
+          touch={touch}
+          onAddWords={() => {
+            closeHelp()
+            setSettingsOpen(true)
+          }}
+          onClose={closeHelp}
+        />
+      )}
       {recorderOpen && <Recorder language={language} onClose={() => setRecorderOpen(false)} />}
       {statsOpen && <StatsPanel onClose={() => setStatsOpen(false)} />}
       {pickerOpen && (
@@ -488,6 +511,10 @@ export default function App() {
             setPickerOpen(false)
           }}
           pictureOf={(w) => pictureFor(w, customPictures)}
+          onAddWords={() => {
+            setPickerOpen(false)
+            setSettingsOpen(true)
+          }}
           onClose={() => setPickerOpen(false)}
         />
       )}

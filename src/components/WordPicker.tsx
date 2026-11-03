@@ -7,6 +7,7 @@ type Props = {
   endlessIndex?: number
   onPickEndless?: (index: number) => void
   pictureOf: (word: string) => string | undefined
+  onAddWords: () => void // opens Settings, where words are added
   onClose: () => void
 }
 
@@ -31,6 +32,12 @@ export function WordPicker(props: Props) {
               <Tiles words={endlessWords} currentIndex={props.endlessIndex ?? -1} pictureOf={props.pictureOf} onPick={onPickEndless} />
             </>
           )}
+          <p className="hint word-picker-add">
+            Want other words?{' '}
+            <button className="link" onClick={props.onAddWords}>
+              ✏️ Add your own, with a picture
+            </button>
+          </p>
         </div>
       </div>
     </div>

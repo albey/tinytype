@@ -56,6 +56,8 @@ export function WordRows({ word, typed, wrong, colour, done, hints, boxes, hidde
               )}
               {/* The cursor: the letter to type, faint and gently blinking. */}
               {isCurrent && !wrong && !hidden && <span className="cursor-letter">{target}</span>}
+              {/* Counting: a ? where the number goes, so it's clear the box wants an answer. */}
+              {isCurrent && !wrong && hidden && <span className="cursor-letter">?</span>}
             </div>
           </div>
         )

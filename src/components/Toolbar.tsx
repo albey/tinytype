@@ -16,10 +16,11 @@ type Props = {
   onOpenCountPicker: () => void
   onOpenSettings: () => void
   onOpenFeedback: () => void
+  onOpenHelp: () => void
 }
 
 // Small grown-up controls in the corner.
-export function Toolbar({ language, onLanguageChange, game, onGameChange, mode, onModeChange, onNextWord, onOpenWordPicker, onOpenCountPicker, onOpenSettings, onOpenFeedback }: Props) {
+export function Toolbar({ language, onLanguageChange, game, onGameChange, mode, onModeChange, onNextWord, onOpenWordPicker, onOpenCountPicker, onOpenSettings, onOpenFeedback, onOpenHelp }: Props) {
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen()
     else document.documentElement.requestFullscreen()
@@ -61,6 +62,9 @@ export function Toolbar({ language, onLanguageChange, game, onGameChange, mode, 
       {/* iPhones can't go full screen from a web page. */}
       {document.fullscreenEnabled && <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>}
       <ToolButton onClick={onOpenSettings}>⚙ Settings</ToolButton>
+      <ToolButton onClick={onOpenHelp} label="How to play">
+        ❓
+      </ToolButton>
       <ToolButton onClick={onOpenFeedback} label="Send feedback">
         💬
       </ToolButton>
