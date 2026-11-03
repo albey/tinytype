@@ -11,7 +11,7 @@ A simple typing game for toddlers. A word appears in big capital letters, and yo
 - **Colour picker**: each letter comes out in the colour chosen when it was typed
 - **Gentle mistakes**: a wrong letter wobbles and plays a soft "bonk" (you can turn the bonk off in Settings)
 - **English and Italian**, with matching words and voice
-- **No accounts, no tracking**: nothing leaves your computer unless you send feedback with the 💬 button. Settings are saved in your browser.
+- **No accounts, no cookies**: the site counts visits anonymously with [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/) (no cookies, nothing that identifies you). Nothing you type or play leaves your browser unless you send feedback with the 💬 button. Settings and stats are saved in your browser.
 
 Made for a toddler who loves banging on the laptop keyboard. Works best on a laptop or desktop with a physical keyboard. On a phone or tablet, tap the word to bring up the device's keyboard.
 
