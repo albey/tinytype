@@ -10,7 +10,7 @@ export const COUNT_NUMBERS = Array.from({ length: MAX_COUNT }, (_, i) => String(
 
 // Things to count: easy to tell apart and nice in a row. Emoji only, so they work in both languages.
 export const THINGS = [
-  '🍎', '🍌', '🍓', '🍊', '🍐', '🍇', '🥕', '🍪', '🧁', '🍦',
+  '🍎', '🍌', '🍓', '🍊', '🍐', '🍇', '🥕', '🥜', '🍪', '🧁', '🍦',
   '🐶', '🐱', '🐟', '🐦', '🦆', '🐷', '🐮', '🐸', '🐝', '🐞', '🦋', '🐢',
   '⭐', '🌸', '🌳', '🎈', '⚽', '🚗', '🚂', '⛵', '✈️', '🧸',
 ]
@@ -26,11 +26,13 @@ export function nextCount(current: number): number {
   return nextIndex(current - 1, MAX_COUNT, 'random') + 1
 }
 
-export function randomThing(): string {
-  return THINGS[Math.floor(Math.random() * THINGS.length)]
+// `things` is the built-in list plus any pictures added in 🎯 Pick.
+export function randomThing(things = THINGS): string {
+  return things[Math.floor(Math.random() * things.length)]
 }
 
-// A different thing from the one on screen.
-export function nextThing(current: string): string {
-  return THINGS[nextIndex(Math.max(THINGS.indexOf(current), 0), THINGS.length, 'random')]
+// A different thing from the one on screen (any of them, if it isn't one of `things`).
+export function nextThing(current: string, things = THINGS): string {
+  const i = things.indexOf(current)
+  return i < 0 ? randomThing(things) : things[nextIndex(i, things.length, 'random')]
 }

@@ -13,7 +13,7 @@ import { Recorder } from './components/Recorder'
 import { CountPicker } from './components/CountPicker'
 import { Objects } from './components/Objects'
 import { StatsPanel } from './components/StatsPanel'
-import { COUNT_NUMBERS, HOW_MANY, MAX_COUNT, nextCount, nextThing, randomCount, randomThing, type Game } from './counting'
+import { COUNT_NUMBERS, HOW_MANY, MAX_COUNT, THINGS, nextCount, nextThing, randomCount, randomThing, type Game } from './counting'
 import { hasClip, loadClipIndex, preloadClips } from './letterClips'
 import { pictureFor, type CustomPictures } from './pictures'
 import { playOops, playWin } from './sounds'
@@ -37,6 +37,8 @@ export default function App() {
   const [game, setGame] = usePersistentState<Game>('tinytype.game', 'letters')
   // Counting: a fixed number and picture, or null for a random one each round.
   // Which games' how-to has been seen, so it shows once per game.
+  // Counting pictures added in 🎯 Pick, on top of the built-in ones.
+  const [addedThings, setAddedThings] = usePersistentState<string[]>('tinytype.countThings', [])
   const [seenHelp, setSeenHelp] = usePersistentState<Partial<Record<Game, boolean>>>('tinytype.seenHelp', {})
   const [savedMode, setMode] = usePersistentState<Mode>('tinytype.mode', 'copy')
   const [colour, setColour] = usePersistentState('tinytype.colour', COLOURS[4])
@@ -63,9 +65,10 @@ export default function App() {
   // Counting: how many things, which thing, and how many have been counted aloud as a hint.
   // 🎯 Pick: a fixed number and/or picture; null = random each round. Back to random on every visit.
   const [countChoice, setCountChoice] = useState<number | null>(null)
-  const [thingChoice, setThingChoice] = useState<string | null>(null)
+  const [thingChoice, setThingChoice] = useState<string[]>([]) // the pictures to use; none = all of them
   const [count, setCount] = useState(randomCount)
-  const [thing, setThing] = useState(randomThing)
+  const things = [...THINGS, ...addedThings]
+  const [thing, setThing] = useState(() => randomThing(things))
   const [counted, setCounted] = useState(0)
   const lastCountedAt = useRef(0)
   // `counted` as of the last press, for presses that come faster than React redraws.
@@ -120,7 +123,7 @@ export default function App() {
 
   // The next round: the chosen number and picture, or new random ones.
   function nextCountRound() {
-    startCountRound(countChoice ?? nextCount(count), thingChoice ?? nextThing(thing))
+    startCountRound(countChoice ?? nextCount(count), nextThing(thing, thingChoice.length > 0 ? thingChoice : things))
   }
 
   // ← and →: one fewer or one more of the same thing, stopping at 1 and 9.
@@ -521,15 +524,34 @@ export default function App() {
       {countPickerOpen && (
         <CountPicker
           number={countChoice}
-          thing={thingChoice}
+          things={thingChoice}
           // Picking shows it straight away; 🎲 keeps what's on screen until the next round.
           onNumberChange={(n) => {
             setCountChoice(n)
             if (n !== null) startCountRound(n, thing)
           }}
-          onThingChange={(t) => {
-            setThingChoice(t)
-            if (t !== null) startCountRound(count, t)
+          onAllThings={() => setThingChoice([])}
+          // Tapping a picture adds it to the ones used (and shows it), or takes it out again.
+          onToggleThing={(t) => {
+            if (thingChoice.includes(t)) {
+              const rest = thingChoice.filter((c) => c !== t)
+              setThingChoice(rest)
+              if (thing === t) startCountRound(count, randomThing(rest.length > 0 ? rest : things))
+            } else {
+              setThingChoice([...thingChoice, t])
+              startCountRound(count, t)
+            }
+          }}
+          added={addedThings}
+          // A new picture is chosen and shown straight away.
+          onAddThing={(t) => {
+            setAddedThings([...addedThings, t])
+            setThingChoice([...thingChoice, t])
+            startCountRound(count, t)
+          }}
+          onRemoveThing={(t) => {
+            setAddedThings(addedThings.filter((a) => a !== t))
+            setThingChoice(thingChoice.filter((c) => c !== t))
           }}
           onClose={() => setCountPickerOpen(false)}
         />

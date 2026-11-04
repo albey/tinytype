@@ -4,6 +4,9 @@ import { firstEmoji, loadEmojiCatalogue, searchPictures } from '../pictures'
 type Props = {
   value: string | undefined // the picture shown on the button
   onPick: (emoji: string) => void // "" means no picture
+  allowNone?: boolean // offer "No picture" (default yes)
+  label?: string // shown on the button instead of the picture, e.g. "＋"
+  title?: string
 }
 
 // Web pages can't open the device's emoji picker, so say how to.
@@ -16,7 +19,7 @@ const DEVICE_EMOJI_TIP = matchMedia('(pointer: coarse)').matches
       : "paste one into the search box."
 
 // A button showing the word's picture; opens a searchable grid to choose another, or to paste any emoji.
-export function EmojiPicker({ value, onPick }: Props) {
+export function EmojiPicker({ value, onPick, allowNone = true, label, title = 'Choose a picture' }: Props) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [, setLoaded] = useState(false) // redraws once the full emoji list has arrived
@@ -47,12 +50,13 @@ export function EmojiPicker({ value, onPick }: Props) {
     <div className="emoji-picker">
       <button
         type="button"
-        className={value ? 'emoji-button' : 'emoji-button empty'}
-        aria-label="Choose a picture"
+        className={value || label ? 'emoji-button' : 'emoji-button empty'}
+        aria-label={title}
+        title={title}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        {value ?? '🖼️'}
+        {label ?? value ?? '🖼️'}
       </button>
 
       {open && (
@@ -69,7 +73,7 @@ export function EmojiPicker({ value, onPick }: Props) {
               else setQuery(e.target.value)
             }}
           />
-          {!query && (
+          {!query && allowNone && (
             <button type="button" className="emoji-none" onClick={() => pick('')}>
               No picture
             </button>
