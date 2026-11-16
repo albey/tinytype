@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useText } from '../text'
 
 // On phones and tablets there's no physical keyboard: an invisible text box over the word
 // opens the device's own keyboard when tapped. Phone keyboards often don't say which key was
@@ -9,6 +10,7 @@ const FILLER = ' '
 
 // `numeric` asks for the number keyboard, for counting.
 export function TouchInput({ onKey, numeric = false }: { onKey: (key: string) => void; numeric?: boolean }) {
+  const t = useText()
   const input = useRef<HTMLInputElement>(null)
   const [focused, setFocused] = useState(false)
 
@@ -47,7 +49,7 @@ export function TouchInput({ onKey, numeric = false }: { onKey: (key: string) =>
       <input
         ref={input}
         className="touch-input"
-        aria-label="Type here"
+        aria-label={t.typeHere}
         defaultValue={FILLER}
         inputMode={numeric ? 'numeric' : undefined}
         autoCapitalize="characters"
@@ -62,7 +64,7 @@ export function TouchInput({ onKey, numeric = false }: { onKey: (key: string) =>
         }}
         onBlur={() => setFocused(false)}
       />
-      {!focused && <div className="touch-prompt">⌨️ Tap here to type</div>}
+      {!focused && <div className="touch-prompt">{t.tapToType}</div>}
     </>
   )
 }

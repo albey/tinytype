@@ -1,8 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react'
+import { useText } from '../text'
 import { cleanWord, type Language, type Order } from '../words'
+import { AlphabetWords } from './AlphabetWords'
 import { EmojiPicker } from './EmojiPicker'
 
-const LANGUAGE_NAMES: Record<Language, string> = { en: 'English', it: 'Italian' }
 const REPEAT_CHOICES = [1, 2, 3, 4, 5]
 
 type Props = {
@@ -16,6 +17,11 @@ type Props = {
   onResetWords: () => void
   order: Order
   onOrderChange: (order: Order) => void
+  alphabetWords: string[]
+  alphabetIndex: number
+  onChooseAlphabetWord: (letter: string, word: string, picture: string | undefined) => void
+  onPlayAlphabetLetter: (index: number) => void
+  onShuffleAlphabet: () => void
   repeats: number
   onRepeatsChange: (repeats: number) => void
   hints: boolean
@@ -42,6 +48,7 @@ type Props = {
 // Grown-up settings: the word list for the current language, order and repeats.
 export function SettingsPanel(props: Props) {
   const { language, words, currentIndex, order, repeats } = props
+  const t = useText()
   const [draft, setDraft] = useState('')
   const wordInput = useRef<HTMLInputElement>(null)
   // The picture chosen for the new word; undefined means "use the built-in one, if any".
@@ -59,15 +66,15 @@ export function SettingsPanel(props: Props) {
     <div className="overlay" onClick={props.onClose} onKeyDown={(e) => e.key === 'Escape' && props.onClose()}>
       <aside className="settings" onClick={(e) => e.stopPropagation()}>
         <header>
-          <h2>Settings</h2>
+          <h2>{t.settingsTitle}</h2>
           <button className="tool" onClick={props.onClose}>
-            Done
+            {t.done}
           </button>
         </header>
 
         <section>
-          <h3>{LANGUAGE_NAMES[language]} words</h3>
-          <p className="hint">Tap a word to practise it now.</p>
+          <h3>{t.yourWordsHeading[language]}</h3>
+          <p className="hint">{t.tapToPractise}</p>
           <ul className="word-list">
             {words.map((w, i) => (
               <li key={w} className={i === currentIndex ? 'chip current' : 'chip'}>
@@ -76,7 +83,7 @@ export function SettingsPanel(props: Props) {
                   {w}
                 </button>
                 {words.length > 1 && (
-                  <button className="chip-remove" aria-label={`Remove ${w}`} onClick={() => props.onRemoveWord(i)}>
+                  <button className="chip-remove" aria-label={t.remove(w)} onClick={() => props.onRemoveWord(i)}>
                     ×
                   </button>
                 )}
@@ -95,117 +102,128 @@ export function SettingsPanel(props: Props) {
               ref={wordInput}
               value={draft}
               onChange={(e) => setDraft(cleanWord(e.target.value))}
-              placeholder="Add a word, e.g. BANANA"
+              placeholder={t.addWordPlaceholder}
               autoFocus
             />
             <button className="tool active" disabled={!draft}>
-              Add
+              {t.add}
             </button>
           </form>
           <button className="link" onClick={props.onResetWords}>
-            Reset to the starter words
+            {t.resetWords}
           </button>
         </section>
 
         <section>
-          <h3>Order</h3>
+          <h3>{t.mode}</h3>
           <div className="choices">
             <button className={order === 'inOrder' ? 'tool active' : 'tool'} onClick={() => props.onOrderChange('inOrder')}>
-              In order
+              {t.inOrder}
             </button>
             <button className={order === 'random' ? 'tool active' : 'tool'} onClick={() => props.onOrderChange('random')}>
-              Random
+              {t.random}
             </button>
             <button className={order === 'endless' ? 'tool active' : 'tool'} onClick={() => props.onOrderChange('endless')}>
-              ♾️ Endless
+              {t.endless}
+            </button>
+            <button className={order === 'alphabet' ? 'tool active' : 'tool'} onClick={() => props.onOrderChange('alphabet')}>
+              {t.alphabet}
             </button>
           </div>
           {order === 'endless' && (
-            <p className="hint">
-              Endless: random words from TinyType's own list of {LANGUAGE_NAMES[language]} toddler words (animals, food, toys…), each with a
-              picture. Your word list is kept for later.
-            </p>
+            <p className="hint">{t.endlessHint(t.languageNames[language])}</p>
+          )}
+          {order === 'alphabet' && (
+            <AlphabetWords
+              language={language}
+              words={props.alphabetWords}
+              currentIndex={props.alphabetIndex}
+              pictureOf={props.pictureOf}
+              onChoose={props.onChooseAlphabetWord}
+              onPlay={props.onPlayAlphabetLetter}
+              onShuffle={props.onShuffleAlphabet}
+            />
           )}
         </section>
 
         <section>
-          <h3>Repeat each word</h3>
+          <h3>{t.repeatEachWord}</h3>
           <div className="choices">
             {REPEAT_CHOICES.map((n) => (
               <button key={n} className={n === repeats ? 'tool active' : 'tool'} onClick={() => props.onRepeatsChange(n)}>
-                {n === 1 ? 'Once' : `${n} times`}
+                {n === 1 ? t.once : t.times(n)}
               </button>
             ))}
           </div>
         </section>
 
         <section>
-          <h3>Sounds</h3>
+          <h3>{t.sounds}</h3>
           <Toggle
-            label="Letter sounds"
-            detail="Say each letter as it's typed"
+            label={t.letterSounds}
+            detail={t.letterSoundsDetail}
             on={props.letterSounds}
             onChange={props.onLetterSoundsChange}
           />
           {/* Recording saves into the app's files, so it's only offered when running locally with `npm run dev`. */}
           {import.meta.env.DEV && (
             <button className="tool record-button" onClick={props.onOpenRecorder}>
-              🎙 Record letter & number sounds ({LANGUAGE_NAMES[language]})
+              {t.recordSounds(t.languageNames[language])}
             </button>
           )}
           <Toggle
-            label="Say the word"
-            detail="Read the word aloud when it's finished (🔊 and Enter always work)"
+            label={t.sayWord}
+            detail={t.sayWordDetail}
             on={props.sayWord}
             onChange={props.onSayWordChange}
           />
           <Toggle
-            label="Wrong-letter sound"
-            detail='A soft "bonk" when a wrong letter is typed'
+            label={t.oopsSound}
+            detail={t.oopsSoundDetail}
             on={props.oopsSound}
             onChange={props.onOopsSoundChange}
           />
           <Toggle
-            label="Win sound"
-            detail="A happy fanfare when a word is finished"
+            label={t.winSound}
+            detail={t.winSoundDetail}
             on={props.winSound}
             onChange={props.onWinSoundChange}
           />
         </section>
 
         <section>
-          <h3>Help</h3>
+          <h3>{t.help}</h3>
           <Toggle
-            label="Pictures"
-            detail="A picture next to the word, when there is one for it"
+            label={t.pictures}
+            detail={t.picturesDetail}
             on={props.pictures}
             onChange={props.onPicturesChange}
           />
           <Toggle
-            label="Hint letters"
-            detail="Show the letter to type, in light grey, in each empty slot"
+            label={t.hintLetters}
+            detail={t.hintLettersDetail}
             on={props.hints}
             onChange={props.onHintsChange}
           />
           <Toggle
-            label="Letter boxes"
-            detail="A box round each letter and its slot underneath"
+            label={t.letterBoxes}
+            detail={t.letterBoxesDetail}
             on={props.boxes}
             onChange={props.onBoxesChange}
           />
           <Toggle
-            label="Confetti"
-            detail="Confetti over the whole screen when a word is finished"
+            label={t.confetti}
+            detail={t.confettiDetail}
             on={props.confetti}
             onChange={props.onConfettiChange}
           />
         </section>
 
         <section>
-          <h3>Stats</h3>
-          <p className="hint">How often each letter and number came up, and how long it took.</p>
+          <h3>{t.stats}</h3>
+          <p className="hint">{t.statsDetail}</p>
           <button className="tool" onClick={props.onOpenStats}>
-            📊 See stats
+            {t.seeStats}
           </button>
         </section>
       </aside>

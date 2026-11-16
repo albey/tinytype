@@ -1,5 +1,6 @@
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import { firstEmoji, loadEmojiCatalogue, searchPictures } from '../pictures'
+import { useText, type Text } from '../text'
 
 type Props = {
   value: string | undefined // the picture shown on the button
@@ -10,16 +11,17 @@ type Props = {
 }
 
 // Web pages can't open the device's emoji picker, so say how to.
-const DEVICE_EMOJI_TIP = matchMedia('(pointer: coarse)').matches
-  ? 'tap the search box, then the 😀 key on the keyboard.'
-  : /Mac/.test(navigator.userAgent)
-    ? 'click the search box, then press Ctrl + ⌘ + Space.'
-    : /Windows/.test(navigator.userAgent)
-      ? 'click the search box, then press Windows key + full stop.'
-      : "paste one into the search box."
+function deviceEmojiTip(t: Text): string {
+  if (matchMedia('(pointer: coarse)').matches) return t.emojiTipTouch
+  if (/Mac/.test(navigator.userAgent)) return t.emojiTipMac
+  if (/Windows/.test(navigator.userAgent)) return t.emojiTipWindows
+  return t.emojiTipOther
+}
 
 // A button showing the word's picture; opens a searchable grid to choose another, or to paste any emoji.
-export function EmojiPicker({ value, onPick, allowNone = true, label, title = 'Choose a picture' }: Props) {
+export function EmojiPicker({ value, onPick, allowNone = true, label, title }: Props) {
+  const t = useText()
+  const buttonTitle = title ?? t.choosePicture
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [, setLoaded] = useState(false) // redraws once the full emoji list has arrived
@@ -51,8 +53,8 @@ export function EmojiPicker({ value, onPick, allowNone = true, label, title = 'C
       <button
         type="button"
         className={value || label ? 'emoji-button' : 'emoji-button empty'}
-        aria-label={title}
-        title={title}
+        aria-label={buttonTitle}
+        title={buttonTitle}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
@@ -63,7 +65,7 @@ export function EmojiPicker({ value, onPick, allowNone = true, label, title = 'C
         <div className="emoji-grid">
           <input
             className="emoji-search"
-            placeholder="Search (fish, pesce…) or paste an emoji"
+            placeholder={t.searchPictures}
             value={query}
             autoFocus
             onKeyDown={onSearchKey}
@@ -75,7 +77,7 @@ export function EmojiPicker({ value, onPick, allowNone = true, label, title = 'C
           />
           {!query && allowNone && (
             <button type="button" className="emoji-none" onClick={() => pick('')}>
-              No picture
+              {t.noPicture}
             </button>
           )}
           {results.map(({ emoji, names }) => (
@@ -89,8 +91,10 @@ export function EmojiPicker({ value, onPick, allowNone = true, label, title = 'C
               {emoji}
             </button>
           ))}
-          {results.length === 0 && <p className="emoji-empty">No match. Try another word, or use your device's emoji (below).</p>}
-          <p className="emoji-device">Any emoji works: {DEVICE_EMOJI_TIP}</p>
+          {results.length === 0 && <p className="emoji-empty">{t.noMatch}</p>}
+          <p className="emoji-device">
+            {t.anyEmoji} {deviceEmojiTip(t)}
+          </p>
         </div>
       )}
     </div>

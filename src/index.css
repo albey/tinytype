@@ -1334,3 +1334,62 @@ button {
 .count-hint {
   margin: -4px 0 8px;
 }
+
+/* Alphabet mode in Settings: a row per letter, tapped open to choose its word. */
+.alphabet-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--guide);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.alphabet-row + .alphabet-row {
+  border-top: 1px solid var(--guide);
+}
+
+.alphabet-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.alphabet-row.current .alphabet-summary {
+  background: var(--panel);
+}
+
+.alphabet-letter {
+  width: 1.4em;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.alphabet-word {
+  flex: 1;
+  font-weight: 800;
+}
+
+.alphabet-more {
+  color: var(--muted);
+}
+
+.alphabet-choices {
+  padding: 4px 14px 14px;
+}
+
+.alphabet-choices .add-word {
+  margin-bottom: 8px;
+}
+
+.alphabet-choices .add-word input {
+  min-width: 0;
+  flex: 1;
+}

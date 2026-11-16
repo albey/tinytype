@@ -10,7 +10,7 @@ A simple typing game for toddlers. A word appears in big capital letters, and yo
 - **One slot per letter**, with the next letter gently blinking, very faint, in its slot
 - **Colour picker**: each letter comes out in the colour chosen when it was typed
 - **Gentle mistakes**: a wrong letter wobbles and plays a soft "bonk" (you can turn the bonk off in Settings)
-- **English and Italian**, with matching words and voice
+- **English and Italian**, with matching words, voice and menus
 - **No accounts, no cookies**: the site counts visits anonymously with [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/) (no cookies, nothing that identifies you). Nothing you type or play leaves your browser unless you send feedback with the 💬 button. Settings and stats are saved in your browser.
 
 Made for a toddler who loves banging on the laptop keyboard. Works best on a laptop or desktop with a physical keyboard. On a phone or tablet, tap the word to bring up the device's keyboard.
@@ -29,7 +29,7 @@ Made for a toddler who loves banging on the laptop keyboard. Works best on a lap
 | 🔤 Words | Pick any word from the list and play it straight away |
 | Next word → | Skip to the next word |
 | ⛶ Full screen | Hides the browser bars so little hands can't click them |
-| ⚙ Settings | Your own word list, in-order or random words, ♾️ endless play (random words from a built-in list of toddler words), how many times each word repeats, sounds on or off (letters, the wrong-letter bonk, the word, the win), hint letters, letter boxes, confetti |
+| ⚙ Settings | Your own word list, a mode (your words in order or at random, ♾️ endless play with random words from a built-in list of toddler words, or 🔤 alphabet: one word per letter, A to Z), how many times each word repeats, sounds on or off (letters, the wrong-letter bonk, the word, the win), hint letters, letter boxes, confetti |
 | 💬 | Send feedback to the author (a message and, if you want a reply, your email) |
 
 **Tip:** use Full screen and stay nearby. A web page can't block shortcuts like Cmd+Q or Cmd+W.
@@ -80,7 +80,7 @@ To stop TinyType, click the terminal window and press **Ctrl+C**. Next time, you
 Open **⚙ Settings**:
 
 - **Words:** type a word and press **Add**. The picture button next to it suggests a picture if TinyType knows the word (🍌 for BANANA). Click it to search for a picture by name in English or Italian (fish, pesce, dino…; Enter picks the first match), paste any emoji, or choose no picture. Tap **×** to remove a word, or tap it to practise it right away. Each language has its own list.
-- **Order:** go through the words **in order**, or pick them **at random** (never the same word twice in a row).
+- **Mode:** go through your words **in order**, or pick them **at random** (never the same word twice in a row); **♾️ Endless** plays random words from TinyType's own list; **🔤 Alphabet** plays one word per letter, from A to Z (A to Z without J, K, W, X, Y in Italian). Each letter starts with a random word from a few suggestions (A for AIRPLANE, B for BANANA…). Tap a letter to choose another suggestion or type your own word starting with that letter, or press 🎲 for a new random set.
 - **Repeat each word:** from once to 5 times. Dots under the word show how many times it's been done.
 - **Sounds:** switch each one on or off: **letter sounds** as he types, **say the word** when it's finished, and the **win sound**. The 🔊 button and Enter always work.
 - **Help:** **pictures** next to the word (an emoji for about 130 common toddler words in English and Italian; other words simply have none), **hint letters** (the letters still to type in light grey), **letter boxes** (a box round each letter and its slot), and **confetti**.

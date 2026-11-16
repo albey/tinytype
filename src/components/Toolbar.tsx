@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Game } from '../counting'
+import { useText } from '../text'
 import type { Language } from '../words'
 
 export type Mode = 'copy' | 'free'
@@ -21,6 +22,7 @@ type Props = {
 
 // Small grown-up controls in the corner.
 export function Toolbar({ language, onLanguageChange, game, onGameChange, mode, onModeChange, onNextWord, onOpenWordPicker, onOpenCountPicker, onOpenSettings, onOpenFeedback, onOpenHelp }: Props) {
+  const t = useText()
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen()
     else document.documentElement.requestFullscreen()
@@ -45,27 +47,27 @@ export function Toolbar({ language, onLanguageChange, game, onGameChange, mode, 
         <>
           <span className="divider" />
           <ToolButton active={mode === 'copy'} onClick={() => onModeChange('copy')}>
-            Copy
+            {t.copy}
           </ToolButton>
           <ToolButton active={mode === 'free'} onClick={() => onModeChange('free')}>
-            Free play
+            {t.freePlay}
           </ToolButton>
         </>
       )}
       <span className="divider" />
       {game === 'letters' ? (
-        <ToolButton onClick={onOpenWordPicker}>🔤 Words</ToolButton>
+        <ToolButton onClick={onOpenWordPicker}>{t.words}</ToolButton>
       ) : (
-        <ToolButton onClick={onOpenCountPicker}>🎯 Pick</ToolButton>
+        <ToolButton onClick={onOpenCountPicker}>{t.pick}</ToolButton>
       )}
-      <ToolButton onClick={onNextWord}>{game === 'letters' ? 'Next word →' : 'Next →'}</ToolButton>
+      <ToolButton onClick={onNextWord}>{game === 'letters' ? t.nextWord : t.next}</ToolButton>
       {/* iPhones can't go full screen from a web page. */}
-      {document.fullscreenEnabled && <ToolButton onClick={toggleFullscreen}>⛶ Full screen</ToolButton>}
-      <ToolButton onClick={onOpenSettings}>⚙ Settings</ToolButton>
-      <ToolButton onClick={onOpenHelp} label="How to play">
+      {document.fullscreenEnabled && <ToolButton onClick={toggleFullscreen}>{t.fullScreen}</ToolButton>}
+      <ToolButton onClick={onOpenSettings}>{t.settings}</ToolButton>
+      <ToolButton onClick={onOpenHelp} label={t.howToPlay}>
         ❓
       </ToolButton>
-      <ToolButton onClick={onOpenFeedback} label="Send feedback">
+      <ToolButton onClick={onOpenFeedback} label={t.sendFeedback}>
         💬
       </ToolButton>
     </div>

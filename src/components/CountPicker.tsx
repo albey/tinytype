@@ -1,4 +1,5 @@
 import { MAX_COUNT, THINGS } from '../counting'
+import { useText } from '../text'
 import { EmojiPicker } from './EmojiPicker'
 
 type Props = {
@@ -17,17 +18,18 @@ const NUMBERS = Array.from({ length: MAX_COUNT }, (_, i) => i + 1)
 
 // A popup to fix how many things and which pictures, or leave either random (🎲).
 export function CountPicker({ number, things, onNumberChange, onAllThings, onToggleThing, added, onAddThing, onRemoveThing, onClose }: Props) {
+  const t = useText()
   return (
     <div className="overlay centred" onClick={onClose} onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <div className="word-picker count-picker" onClick={(e) => e.stopPropagation()}>
         <header>
-          <h2>What to count</h2>
+          <h2>{t.whatToCount}</h2>
           <button className="tool" onClick={onClose} autoFocus>
-            Done
+            {t.done}
           </button>
         </header>
         <div className="word-picker-lists">
-          <h3>How many</h3>
+          <h3>{t.howMany}</h3>
           <div className="word-tiles count-tiles count-numbers">
             <Tile current={number === null} onClick={() => onNumberChange(null)}>
               🎲
@@ -38,29 +40,29 @@ export function CountPicker({ number, things, onNumberChange, onAllThings, onTog
               </Tile>
             ))}
           </div>
-          <h3>Pictures</h3>
+          <h3>{t.picturesHeading}</h3>
           <p className="hint count-hint">
             {things.length === 0
-              ? '🎲 All of them, one at random each round. Tap pictures to use only those.'
+              ? t.allThings
               : things.length === 1
-                ? 'Only this one. Tap more to mix them in, or 🎲 for all.'
-                : `These ${things.length}, one at random each round. Tap one again to take it out, or 🎲 for all.`}
+                ? t.oneThing
+                : t.someThings(things.length)}
           </p>
           <div className="word-tiles count-tiles">
             <Tile current={things.length === 0} onClick={onAllThings}>
               🎲
             </Tile>
-            {THINGS.map((t) => (
-              <Tile key={t} current={things.includes(t)} onClick={() => onToggleThing(t)}>
-                {t}
+            {THINGS.map((thing) => (
+              <Tile key={thing} current={things.includes(thing)} onClick={() => onToggleThing(thing)}>
+                {thing}
               </Tile>
             ))}
-            {added.map((t) => (
-              <div key={t} className="count-added">
-                <Tile current={things.includes(t)} onClick={() => onToggleThing(t)}>
-                  {t}
+            {added.map((thing) => (
+              <div key={thing} className="count-added">
+                <Tile current={things.includes(thing)} onClick={() => onToggleThing(thing)}>
+                  {thing}
                 </Tile>
-                <button className="chip-remove" aria-label={`Remove ${t}`} onClick={() => onRemoveThing(t)}>
+                <button className="chip-remove" aria-label={t.remove(thing)} onClick={() => onRemoveThing(thing)}>
                   ×
                 </button>
               </div>
@@ -69,18 +71,18 @@ export function CountPicker({ number, things, onNumberChange, onAllThings, onTog
             <EmojiPicker
               value={undefined}
               label="＋"
-              title="Add a picture"
+              title={t.addPicture}
               allowNone={false}
-              onPick={(t) => {
+              onPick={(thing) => {
                 // Already in the list: just choose it.
-                if (THINGS.includes(t) || added.includes(t)) {
-                  if (!things.includes(t)) onToggleThing(t)
+                if (THINGS.includes(thing) || added.includes(thing)) {
+                  if (!things.includes(thing)) onToggleThing(thing)
                 }
-                else if (t) onAddThing(t)
+                else if (thing) onAddThing(thing)
               }}
             />
           </div>
-          <p className="hint">＋ adds any emoji to the pictures (search the full list, or paste one). Added ones have a × to remove them.</p>
+          <p className="hint">{t.addPictureHint}</p>
         </div>
       </div>
     </div>

@@ -19,9 +19,10 @@ import { pictureFor, type CustomPictures } from './pictures'
 import { playOops, playWin } from './sounds'
 import { speakLetter, speakWord } from './speech'
 import { elapsed, recordCorrect, recordWrong, startTimer } from './stats'
+import { TEXT, TextContext } from './text'
 import { usePersistentState } from './usePersistentState'
 import { useTouchScreen } from './useTouchScreen'
-import { ENDLESS_WORDS, WORDS, baseLetter, isDigit, isLetter, nextIndex, sameLetter, type Language, type Order, type WordLists } from './words'
+import { ALPHABET, ENDLESS_WORDS, WORDS, alphabetList, randomAlphabet, baseLetter, isDigit, isLetter, nextIndex, sameLetter, type Language, type AlphabetWords, type Order, type WordLists } from './words'
 
 const WRONG_LETTER_MS = 700
 const CELEBRATION_MS = 3200
@@ -44,6 +45,11 @@ export default function App() {
   const [colour, setColour] = usePersistentState('tinytype.colour', COLOURS[4])
   const [wordLists, setWordLists] = usePersistentState<WordLists>('tinytype.words', WORDS)
   const [order, setOrder] = usePersistentState<Order>('tinytype.order', 'inOrder')
+  // Alphabet mode: the word for each letter. A random one each to start with; parents can change them.
+  const [alphabetWords, setAlphabetWords] = usePersistentState<AlphabetWords>('tinytype.alphabetWords', {
+    en: randomAlphabet('en'),
+    it: randomAlphabet('it'),
+  })
   const [repeats, setRepeats] = usePersistentState('tinytype.repeats', 1)
   const [hints, setHints] = usePersistentState('tinytype.hints', false)
   const [boxes, setBoxes] = usePersistentState('tinytype.boxes', true)
@@ -94,9 +100,13 @@ export default function App() {
   useEffect(() => preloadClips(language, COUNT_NUMBERS), [language])
 
   const words = wordLists[language]
-  // Endless play draws from the built-in list instead of the parent's.
+  // Endless play draws from the built-in list instead of the parent's, and alphabet mode from the
+  // word chosen for each letter. Neither touches the parent's own list.
   const endless = order === 'endless'
-  const playList = endless ? ENDLESS_WORDS[language] : words
+  const alphabet = order === 'alphabet'
+  const ownList = !endless && !alphabet
+  const alphabetWordList = alphabetList(language, alphabetWords)
+  const playList = endless ? ENDLESS_WORDS[language] : alphabet ? alphabetWordList : words
   const currentIndex = wordIndex % playList.length
   // Counting reuses the typing game: the "word" is the number, typed with the number keys.
   const counting = game === 'numbers'
@@ -218,12 +228,25 @@ export default function App() {
     setHistory([])
   }
 
-  // Switching to or from endless play changes the list being played.
+  // Which list a mode plays: the parent's own words (in order or random), endless or the alphabet.
+  const listOf = (o: Order) => (o === 'endless' || o === 'alphabet' ? o : 'own')
+
+  // Switching between lists starts the new one: somewhere random for endless, at A for the alphabet.
   function changeOrder(next: Order) {
     setOrder(next)
-    if ((next === 'endless') === endless) return
+    if (listOf(next) === listOf(order)) return
     setHistory([])
     goToWord(next === 'endless' ? Math.floor(Math.random() * ENDLESS_WORDS[language].length) : 0)
+  }
+
+  // A new word for one letter. If it's the letter being played, the new word shows straight away.
+  function chooseAlphabetWord(letter: string, w: string, pic: string | undefined) {
+    setAlphabetWords({ ...alphabetWords, [language]: { ...alphabetWords[language], [letter]: w } })
+    if (pic !== undefined) setCustomPictures({ ...customPictures, [w]: pic })
+    if (alphabet && ALPHABET[language][currentIndex] === letter) {
+      setTyped([])
+      setWrong(null)
+    }
   }
 
   // The history holds positions in the list, so it's cleared whenever the list changes.
@@ -236,7 +259,7 @@ export default function App() {
     const next = words.filter((_, i) => i !== index)
     setWords(next)
     // Stay on the same word if it's still there.
-    if (endless) return
+    if (!ownList) return
     const stillThere = next.indexOf(word)
     if (stillThere >= 0) setWordIndex(stillThere)
     else goToWord(0)
@@ -357,206 +380,226 @@ export default function App() {
   }
 
   const roundsShown = round + (done ? 1 : 0)
+  const t = TEXT[language]
 
   return (
-    <div className="app">
-      <Toolbar
-        language={language}
-        onLanguageChange={changeLanguage}
-        game={game}
-        onGameChange={changeGame}
-        mode={mode}
-        onModeChange={FREE_PLAY ? setMode : undefined}
-        onNextWord={nextWord}
-        onOpenWordPicker={() => setPickerOpen(true)}
-        onOpenCountPicker={() => setCountPickerOpen(true)}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onOpenFeedback={() => setFeedbackOpen(true)}
-        onOpenHelp={() => setHelpOpen(true)}
-      />
-      <main className="stage">
-        <div className={counting ? 'play counting' : 'play'}>
-          <button
-            className="speak"
-            aria-label={counting ? 'Ask how many' : 'Say the word'}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={sayPrompt}
-          >
-            🔊
-          </button>
-          {counting && <Objects key={`${thing}-${count}`} thing={thing} count={count} counted={counted} onTap={countAloud} />}
-          {counting && (
-            // Drawn like the space bar, so it's clear that Space counts the things; clicking it works too.
-            // It pulses until the first count of the round.
-            <button className={counted === 0 ? 'space-hint waiting' : 'space-hint'} aria-label="Count them (Space)" title="Space: count them" onMouseDown={(e) => e.preventDefault()} onClick={countAloud}>
-              <span className="space-key">␣</span>
-              <span className="space-hint-numbers">1 2 3…</span>
+    <TextContext.Provider value={t}>
+      <div className="app">
+        <Toolbar
+          language={language}
+          onLanguageChange={changeLanguage}
+          game={game}
+          onGameChange={changeGame}
+          mode={mode}
+          onModeChange={FREE_PLAY ? setMode : undefined}
+          onNextWord={nextWord}
+          onOpenWordPicker={() => setPickerOpen(true)}
+          onOpenCountPicker={() => setCountPickerOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenFeedback={() => setFeedbackOpen(true)}
+          onOpenHelp={() => setHelpOpen(true)}
+        />
+        <main className="stage">
+          <div className={counting ? 'play counting' : 'play'}>
+            <button
+              className="speak"
+              aria-label={counting ? t.askHowMany : t.sayTheWord}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={sayPrompt}
+            >
+              🔊
             </button>
-          )}
-          <div className="rows-area">
-            <WordRows
-              word={word}
-              typed={typed}
-              wrong={wrong}
-              colour={colour}
-              done={done}
-              hints={hints && !counting}
-              boxes={boxes}
-              hidden={counting}
-            />
-            {touch && <TouchInput onKey={(key) => handleKey.current(key)} numeric={counting} />}
+            {counting && <Objects key={`${thing}-${count}`} thing={thing} count={count} counted={counted} onTap={countAloud} />}
+            {counting && (
+              // Drawn like the space bar, so it's clear that Space counts the things; clicking it works too.
+              // It pulses until the first count of the round.
+              <button className={counted === 0 ? 'space-hint waiting' : 'space-hint'} aria-label={t.countThem} title={t.countThemTitle} onMouseDown={(e) => e.preventDefault()} onClick={countAloud}>
+                <span className="space-key">␣</span>
+                <span className="space-hint-numbers">1 2 3…</span>
+              </button>
+            )}
+            <div className="rows-area">
+              <WordRows
+                word={word}
+                typed={typed}
+                wrong={wrong}
+                colour={colour}
+                done={done}
+                hints={hints && !counting}
+                boxes={boxes}
+                hidden={counting}
+              />
+              {touch && <TouchInput onKey={(key) => handleKey.current(key)} numeric={counting} />}
+            </div>
+            {!counting && pictures && picture && (
+              <div key={word} className="picture" aria-hidden="true">
+                {picture}
+              </div>
+            )}
           </div>
-          {!counting && pictures && picture && (
-            <div key={word} className="picture" aria-hidden="true">
-              {picture}
+          {repeats > 1 && !counting && (
+            <div className="rounds" aria-label={t.roundsOf(roundsShown, repeats)}>
+              {Array.from({ length: repeats }, (_, i) => (
+                <span key={i} className={i < roundsShown ? 'round filled' : 'round'} />
+              ))}
             </div>
           )}
-        </div>
-        {repeats > 1 && !counting && (
-          <div className="rounds" aria-label={`${roundsShown} of ${repeats}`}>
-            {Array.from({ length: repeats }, (_, i) => (
-              <span key={i} className={i < roundsShown ? 'round filled' : 'round'} />
-            ))}
-          </div>
+          {done && <div className="celebration">🎉</div>}
+        </main>
+        <ColourPicker colour={colour} onChange={setColour} />
+        {done && confetti && <Confetti />}
+
+        {settingsOpen && (
+          <SettingsPanel
+            language={language}
+            words={words}
+            currentIndex={ownList ? currentIndex : -1}
+            onAddWord={(w, pic) => {
+              setWords([...words, w])
+              // Only remember a picture the parent actually chose; otherwise the built-in one applies.
+              if (pic !== undefined) setCustomPictures({ ...customPictures, [w]: pic })
+            }}
+            pictureOf={(w) => pictureFor(w, customPictures)}
+            onRemoveWord={removeWord}
+            onPickWord={(i) => {
+              // Picking one of your own words leaves endless play or the alphabet, and counting.
+              if (!ownList) {
+                setOrder('random')
+                setHistory([])
+              }
+              if (counting) changeGame('letters')
+              goToWord(i)
+            }}
+            onResetWords={() => {
+              setWords(WORDS[language])
+              if (ownList) goToWord(0)
+            }}
+            order={order}
+            onOrderChange={changeOrder}
+            alphabetWords={alphabetWordList}
+            alphabetIndex={alphabet ? currentIndex : -1}
+            onChooseAlphabetWord={chooseAlphabetWord}
+            onPlayAlphabetLetter={(i) => {
+              if (!alphabet) changeOrder('alphabet')
+              if (counting) changeGame('letters')
+              goToWord(i)
+              setSettingsOpen(false)
+            }}
+            onShuffleAlphabet={() => {
+              setAlphabetWords({ ...alphabetWords, [language]: randomAlphabet(language) })
+              if (alphabet) setTyped([])
+            }}
+            repeats={repeats}
+            onRepeatsChange={setRepeats}
+            hints={hints}
+            onHintsChange={setHints}
+            boxes={boxes}
+            onBoxesChange={setBoxes}
+            confetti={confetti}
+            onConfettiChange={setConfetti}
+            winSound={winSound}
+            onWinSoundChange={setWinSound}
+            letterSounds={letterSounds}
+            onLetterSoundsChange={setLetterSounds}
+            oopsSound={oopsSound}
+            onOopsSoundChange={setOopsSound}
+            sayWord={sayWordAtEnd}
+            onSayWordChange={setSayWordAtEnd}
+            pictures={pictures}
+            onPicturesChange={setPictures}
+            onOpenRecorder={() => {
+              setSettingsOpen(false)
+              setRecorderOpen(true)
+            }}
+            onOpenStats={() => {
+              setSettingsOpen(false)
+              setStatsOpen(true)
+            }}
+            onClose={() => setSettingsOpen(false)}
+          />
         )}
-        {done && <div className="celebration">🎉</div>}
-      </main>
-      <ColourPicker colour={colour} onChange={setColour} />
-      {done && confetti && <Confetti />}
 
-      {settingsOpen && (
-        <SettingsPanel
-          language={language}
-          words={words}
-          currentIndex={endless ? -1 : currentIndex}
-          onAddWord={(w, pic) => {
-            setWords([...words, w])
-            // Only remember a picture the parent actually chose; otherwise the built-in one applies.
-            if (pic !== undefined) setCustomPictures({ ...customPictures, [w]: pic })
-          }}
-          pictureOf={(w) => pictureFor(w, customPictures)}
-          onRemoveWord={removeWord}
-          onPickWord={(i) => {
-            // Picking one of your own words leaves endless play, and counting.
-            if (endless) setOrder('random')
-            if (counting) changeGame('letters')
-            goToWord(i)
-          }}
-          onResetWords={() => {
-            setWords(WORDS[language])
-            if (!endless) goToWord(0)
-          }}
-          order={order}
-          onOrderChange={changeOrder}
-          repeats={repeats}
-          onRepeatsChange={setRepeats}
-          hints={hints}
-          onHintsChange={setHints}
-          boxes={boxes}
-          onBoxesChange={setBoxes}
-          confetti={confetti}
-          onConfettiChange={setConfetti}
-          winSound={winSound}
-          onWinSoundChange={setWinSound}
-          letterSounds={letterSounds}
-          onLetterSoundsChange={setLetterSounds}
-          oopsSound={oopsSound}
-          onOopsSoundChange={setOopsSound}
-          sayWord={sayWordAtEnd}
-          onSayWordChange={setSayWordAtEnd}
-          pictures={pictures}
-          onPicturesChange={setPictures}
-          onOpenRecorder={() => {
-            setSettingsOpen(false)
-            setRecorderOpen(true)
-          }}
-          onOpenStats={() => {
-            setSettingsOpen(false)
-            setStatsOpen(true)
-          }}
-          onClose={() => setSettingsOpen(false)}
-        />
-      )}
-
-      {helpOpen && (
-        <HowToPlay
-          game={game}
-          touch={touch}
-          onAddWords={() => {
-            closeHelp()
-            setSettingsOpen(true)
-          }}
-          onClose={closeHelp}
-        />
-      )}
-      {recorderOpen && <Recorder language={language} onClose={() => setRecorderOpen(false)} />}
-      {statsOpen && <StatsPanel onClose={() => setStatsOpen(false)} />}
-      {pickerOpen && (
-        <WordPicker
-          words={words}
-          currentIndex={endless ? -1 : currentIndex}
-          onPick={(i) => {
-            if (endless) {
-              // Picking one of your own words leaves endless play, as in Settings.
-              setOrder('random')
-              setHistory([])
-            } else {
+        {helpOpen && (
+          <HowToPlay
+            game={game}
+            touch={touch}
+            onAddWords={() => {
+              closeHelp()
+              setSettingsOpen(true)
+            }}
+            onClose={closeHelp}
+          />
+        )}
+        {recorderOpen && <Recorder language={language} onClose={() => setRecorderOpen(false)} />}
+        {statsOpen && <StatsPanel onClose={() => setStatsOpen(false)} />}
+        {pickerOpen && (
+          <WordPicker
+            words={words}
+            currentIndex={ownList ? currentIndex : -1}
+            onPick={(i) => {
+              if (!ownList) {
+                // Picking one of your own words leaves endless play or the alphabet, as in Settings.
+                setOrder('random')
+                setHistory([])
+              } else {
+                setHistory((h) => [...h, currentIndex].slice(-50))
+              }
+              goToWord(i)
+              setPickerOpen(false)
+            }}
+            extraTitle={endless ? t.endlessWords : t.alphabetWords}
+            extraWords={ownList ? undefined : playList}
+            extraIndex={currentIndex}
+            onPickExtra={(i) => {
               setHistory((h) => [...h, currentIndex].slice(-50))
-            }
-            goToWord(i)
-            setPickerOpen(false)
-          }}
-          endlessWords={endless ? playList : undefined}
-          endlessIndex={currentIndex}
-          onPickEndless={(i) => {
-            setHistory((h) => [...h, currentIndex].slice(-50))
-            goToWord(i)
-            setPickerOpen(false)
-          }}
-          pictureOf={(w) => pictureFor(w, customPictures)}
-          onAddWords={() => {
-            setPickerOpen(false)
-            setSettingsOpen(true)
-          }}
-          onClose={() => setPickerOpen(false)}
-        />
-      )}
-      {countPickerOpen && (
-        <CountPicker
-          number={countChoice}
-          things={thingChoice}
-          // Picking shows it straight away; 🎲 keeps what's on screen until the next round.
-          onNumberChange={(n) => {
-            setCountChoice(n)
-            if (n !== null) startCountRound(n, thing)
-          }}
-          onAllThings={() => setThingChoice([])}
-          // Tapping a picture adds it to the ones used (and shows it), or takes it out again.
-          onToggleThing={(t) => {
-            if (thingChoice.includes(t)) {
-              const rest = thingChoice.filter((c) => c !== t)
-              setThingChoice(rest)
-              if (thing === t) startCountRound(count, randomThing(rest.length > 0 ? rest : things))
-            } else {
+              goToWord(i)
+              setPickerOpen(false)
+            }}
+            pictureOf={(w) => pictureFor(w, customPictures)}
+            onAddWords={() => {
+              setPickerOpen(false)
+              setSettingsOpen(true)
+            }}
+            onClose={() => setPickerOpen(false)}
+          />
+        )}
+        {countPickerOpen && (
+          <CountPicker
+            number={countChoice}
+            things={thingChoice}
+            // Picking shows it straight away; 🎲 keeps what's on screen until the next round.
+            onNumberChange={(n) => {
+              setCountChoice(n)
+              if (n !== null) startCountRound(n, thing)
+            }}
+            onAllThings={() => setThingChoice([])}
+            // Tapping a picture adds it to the ones used (and shows it), or takes it out again.
+            onToggleThing={(t) => {
+              if (thingChoice.includes(t)) {
+                const rest = thingChoice.filter((c) => c !== t)
+                setThingChoice(rest)
+                if (thing === t) startCountRound(count, randomThing(rest.length > 0 ? rest : things))
+              } else {
+                setThingChoice([...thingChoice, t])
+                startCountRound(count, t)
+              }
+            }}
+            added={addedThings}
+            // A new picture is chosen and shown straight away.
+            onAddThing={(t) => {
+              setAddedThings([...addedThings, t])
               setThingChoice([...thingChoice, t])
               startCountRound(count, t)
-            }
-          }}
-          added={addedThings}
-          // A new picture is chosen and shown straight away.
-          onAddThing={(t) => {
-            setAddedThings([...addedThings, t])
-            setThingChoice([...thingChoice, t])
-            startCountRound(count, t)
-          }}
-          onRemoveThing={(t) => {
-            setAddedThings(addedThings.filter((a) => a !== t))
-            setThingChoice(thingChoice.filter((c) => c !== t))
-          }}
-          onClose={() => setCountPickerOpen(false)}
-        />
-      )}
-      {feedbackOpen && <Feedback language={language} onClose={() => setFeedbackOpen(false)} />}
-    </div>
+            }}
+            onRemoveThing={(t) => {
+              setAddedThings(addedThings.filter((a) => a !== t))
+              setThingChoice(thingChoice.filter((c) => c !== t))
+            }}
+            onClose={() => setCountPickerOpen(false)}
+          />
+        )}
+        {feedbackOpen && <Feedback language={language} onClose={() => setFeedbackOpen(false)} />}
+      </div>
+    </TextContext.Provider>
   )
 }

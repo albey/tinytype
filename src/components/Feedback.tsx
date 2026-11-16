@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useText } from '../text'
 import type { Language } from '../words'
 
 // Web3Forms emails each message to the TinyType author. The key is public by design:
@@ -14,6 +15,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error'
 
 // A small popup for grown-ups to send feedback.
 export function Feedback({ language, onClose }: Props) {
+  const t = useText()
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
   const [botcheck, setBotcheck] = useState(false) // hidden; only bots tick it
@@ -45,26 +47,26 @@ export function Feedback({ language, onClose }: Props) {
     <div className="overlay centred" onClick={onClose} onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <form className="feedback" onClick={(e) => e.stopPropagation()} onSubmit={send}>
         <header>
-          <h2>Send feedback</h2>
+          <h2>{t.feedbackTitle}</h2>
           <button type="button" className="tool" onClick={onClose}>
-            Close
+            {t.close}
           </button>
         </header>
 
         {status === 'sent' ? (
           <>
-            <p>Thank you! Your message is on its way.</p>
+            <p>{t.thanks}</p>
             <button type="button" className="tool active" onClick={onClose} autoFocus>
-              Back to TinyType
+              {t.backToTinyType}
             </button>
           </>
         ) : (
           <>
-            <p className="hint">What does your child like? What's missing or not working? Any words or languages you'd like?</p>
+            <p className="hint">{t.feedbackPrompt}</p>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Your message"
+              placeholder={t.yourMessage}
               rows={5}
               maxLength={3000}
               autoFocus
@@ -74,7 +76,7 @@ export function Feedback({ language, onClose }: Props) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               maxLength={254}
-              placeholder="Your email, if you'd like a reply (optional)"
+              placeholder={t.yourEmail}
             />
             <input
               type="checkbox"
@@ -84,9 +86,9 @@ export function Feedback({ language, onClose }: Props) {
               checked={botcheck}
               onChange={(e) => setBotcheck(e.target.checked)}
             />
-            {status === 'error' && <p className="feedback-error">Sending failed. Check the connection and try again.</p>}
+            {status === 'error' && <p className="feedback-error">{t.sendFailed}</p>}
             <button className="tool active" disabled={!message.trim() || status === 'sending'}>
-              {status === 'sending' ? 'Sending…' : 'Send'}
+              {status === 'sending' ? t.sending : t.send}
             </button>
           </>
         )}

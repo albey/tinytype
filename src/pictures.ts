@@ -29,6 +29,22 @@ const PICTURES: Record<string, string> = {
   // Nature
   SUN: '☀️', MOON: '🌙', STAR: '⭐', TREE: '🌳', FLOWER: '🌸', RAIN: '🌧️', SNOW: '❄️',
   SOLE: '☀️', LUNA: '🌙', STELLA: '⭐', ALBERO: '🌳', FIORE: '🌸', PIOGGIA: '🌧️', NEVE: '❄️',
+
+  // More words for the alphabet mode (see ALPHABET_CHOICES in words.ts)
+  ANT: '🐜', AIRPLANE: '✈️', ALLIGATOR: '🐊', COOKIE: '🍪', DRUM: '🥁', DINOSAUR: '🦖', DRAGON: '🐉',
+  EAR: '👂', EAGLE: '🦅', FOX: '🦊', FORK: '🍴', GIRAFFE: '🦒', GUITAR: '🎸', GHOST: '👻', HEART: '❤️',
+  ICE: '🧊', IGUANA: '🦎', ISLAND: '🏝️', JUICE: '🧃', JACKET: '🧥', JEANS: '👖', KITE: '🪁',
+  KANGAROO: '🦘', KOALA: '🐨', KING: '🤴', LEAF: '🍃', LEMON: '🍋', LADYBUG: '🐞', NOSE: '👃', NUT: '🥜',
+  NOODLES: '🍜', OCTOPUS: '🐙', OTTER: '🦦', PENGUIN: '🐧', QUEEN: '👸', RAINBOW: '🌈', ROBOT: '🤖',
+  ROCKET: '🚀', SOCK: '🧦', SNAIL: '🐌', TOMATO: '🍅', UMBRELLA: '☂️', UNICORN: '🦄', VAN: '🚐',
+  VIOLIN: '🎻', VOLCANO: '🌋', WHALE: '🐳', WATERMELON: '🍉', WORM: '🪱', XYLOPHONE: '🎼', YOYO: '🪀',
+  YAK: '🐃', YARN: '🧶', ZEBRA: '🦓',
+  ANATRA: '🦆', BALENA: '🐳', BICICLETTA: '🚲', CUORE: '❤️', DRAGO: '🐉', DINOSAURO: '🦖', DADO: '🎲',
+  DENTE: '🦷', ELICOTTERO: '🚁', FRAGOLA: '🍓', FARFALLA: '🦋', FOGLIA: '🍃', GIRAFFA: '🦒',
+  GALLINA: '🐔', HAMBURGER: '🍔', HOCKEY: '🏒', ISOLA: '🏝️', INSALATA: '🥗', LUMACA: '🐌', LIMONE: '🍋',
+  MARE: '🌊', NUVOLA: '☁️', NASO: '👃', OROLOGIO: '⏰', OCCHIALI: '👓', PINGUINO: '🐧', QUADERNO: '📓',
+  QUADRO: '🖼️', RAGNO: '🕷️', RAZZO: '🚀', SQUALO: '🦈', TAMBURO: '🥁', UNICORNO: '🦄', VOLPE: '🦊',
+  VIOLINO: '🎻', VULCANO: '🌋', ZUCCA: '🎃', ZAINO: '🎒',
 }
 
 // Pictures parents chose for their own words. "" means "no picture" (even if there's a built-in one).

@@ -7,7 +7,7 @@ const KEEP_TIMES = 20 // recent times kept per item, for a typical (median) time
 
 // Longer than this, the player probably walked off: the answer counts, but isn't timed.
 // Counting gets longer, since it includes counting up to 9 things.
-const MAX_TIME_MS: Record<Group, number> = { letters: 30_000, numbers: 60_000, things: 60_000 }
+export const MAX_TIME_MS: Record<Group, number> = { letters: 30_000, numbers: 60_000, things: 60_000 }
 
 export type Entry = {
   correct: number

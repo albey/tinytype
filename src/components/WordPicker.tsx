@@ -1,11 +1,14 @@
+import { useText } from '../text'
+
 type Props = {
   words: string[]
   currentIndex: number // -1 when the current word isn't one of these
   onPick: (index: number) => void
-  // In endless play, the built-in endless words are listed too, under the parent's own.
-  endlessWords?: string[]
-  endlessIndex?: number
-  onPickEndless?: (index: number) => void
+  // In endless play or alphabet mode, the words being played are listed too, under the parent's own.
+  extraTitle?: string
+  extraWords?: string[]
+  extraIndex?: number
+  onPickExtra?: (index: number) => void
   pictureOf: (word: string) => string | undefined
   onAddWords: () => void // opens Settings, where words are added
   onClose: () => void
@@ -13,29 +16,30 @@ type Props = {
 
 // A popup with the words to choose from, as big tiles: tap one to play it straight away.
 export function WordPicker(props: Props) {
-  const { endlessWords, onPickEndless, onClose } = props
+  const { extraWords, onPickExtra, onClose } = props
+  const t = useText()
   return (
     <div className="overlay centred" onClick={onClose} onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <div className="word-picker" onClick={(e) => e.stopPropagation()}>
         <header>
-          <h2>Pick a word</h2>
+          <h2>{t.pickAWord}</h2>
           <button className="tool" onClick={onClose} autoFocus>
-            Close
+            {t.close}
           </button>
         </header>
         <div className="word-picker-lists">
-          {endlessWords && <h3>Your words</h3>}
+          {extraWords && <h3>{t.yourWords}</h3>}
           <Tiles words={props.words} currentIndex={props.currentIndex} pictureOf={props.pictureOf} onPick={props.onPick} />
-          {endlessWords && onPickEndless && (
+          {extraWords && onPickExtra && (
             <>
-              <h3>♾️ Endless words</h3>
-              <Tiles words={endlessWords} currentIndex={props.endlessIndex ?? -1} pictureOf={props.pictureOf} onPick={onPickEndless} />
+              <h3>{props.extraTitle}</h3>
+              <Tiles words={extraWords} currentIndex={props.extraIndex ?? -1} pictureOf={props.pictureOf} onPick={onPickExtra} />
             </>
           )}
           <p className="hint word-picker-add">
-            Want other words?{' '}
+            {t.wantOtherWords}{' '}
             <button className="link" onClick={props.onAddWords}>
-              ✏️ Add your own, with a picture
+              {t.addYourOwn}
             </button>
           </p>
         </div>

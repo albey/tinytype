@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { useText } from '../text'
 
 type Props = {
   thing: string
@@ -9,6 +10,7 @@ type Props = {
 
 // The things to count, in rows of five (like a ten frame), so 6–10 read as "five and some more".
 export function Objects({ thing, count, counted, onTap }: Props) {
+  const t = useText()
   return (
     <div className="objects" style={{ gridTemplateColumns: `repeat(${Math.min(count, 5)}, auto)` }}>
       {Array.from({ length: count }, (_, i) => (
@@ -16,7 +18,7 @@ export function Objects({ thing, count, counted, onTap }: Props) {
           key={i}
           className={['object', i < counted && 'counted', i === count - 1 && counted === count && 'final'].filter(Boolean).join(' ')}
           style={{ '--delay': `${i * 0.06}s` } as CSSProperties}
-          aria-label="Count"
+          aria-label={t.count}
           onMouseDown={(e) => e.preventDefault()}
           onClick={onTap}
         >

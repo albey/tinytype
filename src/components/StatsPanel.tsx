@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { COUNT_NUMBERS } from '../counting'
-import { MIN_TIMED, getStats, median, resetStats, type Entry, type Group, type Stats } from '../stats'
+import { useText } from '../text'
+import { MAX_TIME_MS, MIN_TIMED, getStats, median, resetStats, type Entry, type Group, type Stats } from '../stats'
 
 // Laid out like the keyboard, so slow letters can be spotted by where they are.
 const KEY_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map((row) => [...row])
@@ -13,12 +14,13 @@ type Selected = { group: Group; item: string } | null
 
 // The stats so far: how often each letter, number and counting picture came up, and how long it took.
 export function StatsPanel({ onClose }: { onClose: () => void }) {
+  const t = useText()
   const [stats, setStats] = useState<Stats>(getStats)
   const [selected, setSelected] = useState<Selected>(null)
   const things = Object.keys(stats.things)
 
   function reset() {
-    if (!confirm('Delete all the stats on this device?')) return
+    if (!confirm(t.resetStatsConfirm)) return
     resetStats()
     setStats(getStats())
     setSelected(null)
@@ -42,15 +44,15 @@ export function StatsPanel({ onClose }: { onClose: () => void }) {
     <div className="overlay centred" onClick={onClose} onKeyDown={(e) => e.key === 'Escape' && onClose()}>
       <div className="word-picker stats" onClick={(e) => e.stopPropagation()}>
         <header>
-          <h2>📊 Stats</h2>
+          <h2>{t.statsTitle}</h2>
           <button className="tool" onClick={onClose} autoFocus>
-            Done
+            {t.done}
           </button>
         </header>
         <div className="word-picker-lists">
           <Legend />
 
-          <h3>Letters</h3>
+          <h3>{t.letters}</h3>
           <div className="stat-keyboard">
             {KEY_ROWS.map((row, i) => (
               <div key={i} className="stat-row" style={{ paddingLeft: `${i * 0.5 * 56}px` }}>
@@ -60,20 +62,17 @@ export function StatsPanel({ onClose }: { onClose: () => void }) {
           </div>
           {detail('letters')}
 
-          <h3>Counting: numbers</h3>
+          <h3>{t.countingNumbers}</h3>
           <div className="stat-row">{COUNT_NUMBERS.map((n) => tile('numbers', n))}</div>
           {detail('numbers')}
 
-          <h3>Counting: pictures</h3>
-          {things.length > 0 ? <div className="stat-row wrap">{things.map((t) => tile('things', t))}</div> : <p className="hint">None counted yet.</p>}
+          <h3>{t.countingPictures}</h3>
+          {things.length > 0 ? <div className="stat-row wrap">{things.map((thing) => tile('things', thing))}</div> : <p className="hint">{t.noneCounted}</p>}
           {detail('things')}
 
-          <p className="hint stats-note">
-            Kept in this browser only, for both languages. Not timed: the first letter of a word (it includes reading the word), answers
-            after a spoken hint (Space), and anything over 30 s (letters) or 60 s (counting).
-          </p>
+          <p className="hint stats-note">{t.statsNote(MAX_TIME_MS.letters / 1000, MAX_TIME_MS.numbers / 1000)}</p>
           <button className="link" onClick={reset}>
-            Reset stats
+            {t.resetStats}
           </button>
         </div>
       </div>
@@ -99,10 +98,11 @@ function seconds(ms: number | null): string {
 }
 
 function Tile({ item, entry, shade, current, onClick }: { item: string; entry?: Entry; shade: number | null; current: boolean; onClick: () => void }) {
+  const t = useText()
   const className = ['stat-tile', !entry && 'unseen', entry && shade === null && 'few', current && 'current'].filter(Boolean).join(' ')
   const style = shade === null ? undefined : ({ background: RAMP[shade], color: shade >= DARK_FROM ? '#fff' : undefined } as CSSProperties)
   return (
-    <button className={className} style={style} onClick={onClick} title={entry ? `${item}: typical ${seconds(median(entry.times))}` : `${item}: not seen yet`}>
+    <button className={className} style={style} onClick={onClick} title={entry ? t.typicalTitle(item, seconds(median(entry.times))) : t.notSeenTitle(item)}>
       <span className="stat-item">{item}</span>
       <span className="stat-time">{entry ? seconds(median(entry.times)) : ''}</span>
       <span className="stat-counts">{entry ? `${entry.correct}✓ ${entry.wrong}✗` : ''}</span>
@@ -112,7 +112,8 @@ function Tile({ item, entry, shade, current, onClick }: { item: string; entry?: 
 
 // Everything recorded for one item, so the numbers can be checked.
 function Detail({ item, entry }: { item: string; entry?: Entry }) {
-  if (!entry) return <div className="stat-detail">{item}: not seen yet.</div>
+  const t = useText()
+  if (!entry) return <div className="stat-detail">{t.notSeenYet(item)}</div>
   const mixups = Object.entries(entry.mixups).sort((a, b) => b[1] - a[1])
   return (
     <div className="stat-detail">
@@ -120,30 +121,30 @@ function Detail({ item, entry }: { item: string; entry?: Entry }) {
       <table>
         <tbody>
           <tr>
-            <th>Right</th>
+            <th>{t.right}</th>
             <td>
               {entry.correct}
-              {entry.helped > 0 && ` (${entry.helped} after a spoken hint)`}
+              {entry.helped > 0 && t.afterHint(entry.helped)}
             </td>
           </tr>
           <tr>
-            <th>Wrong</th>
+            <th>{t.wrong}</th>
             <td>{entry.wrong}</td>
           </tr>
           <tr>
-            <th>Pressed instead</th>
+            <th>{t.pressedInstead}</th>
             <td>{mixups.length ? mixups.map(([key, n]) => `${key} ×${n}`).join(', ') : '–'}</td>
           </tr>
           <tr>
-            <th>Typical time</th>
+            <th>{t.typicalTime}</th>
             <td>
               {seconds(median(entry.times))}
-              {entry.times.length < MIN_TIMED && ` (only ${entry.times.length} timed, needs ${MIN_TIMED})`}
+              {entry.times.length < MIN_TIMED && t.onlyTimed(entry.times.length, MIN_TIMED)}
             </td>
           </tr>
           <tr>
-            <th>Recent times</th>
-            <td>{entry.times.length ? entry.times.map((t) => (t / 1000).toFixed(1)).join(', ') + ' s' : '–'}</td>
+            <th>{t.recentTimes}</th>
+            <td>{entry.times.length ? entry.times.map((ms) => (ms / 1000).toFixed(1)).join(', ') + ' s' : '–'}</td>
           </tr>
         </tbody>
       </table>
@@ -152,18 +153,19 @@ function Detail({ item, entry }: { item: string; entry?: Entry }) {
 }
 
 function Legend() {
+  const t = useText()
   return (
     <div className="stat-legend">
-      <span>Faster</span>
+      <span>{t.faster}</span>
       <span className="stat-ramp">
         {RAMP.map((c) => (
           <span key={c} style={{ background: c }} />
         ))}
       </span>
-      <span>Slower</span>
-      <span className="stat-tile few legend-swatch" /> fewer than {MIN_TIMED} timed
-      <span className="stat-tile unseen legend-swatch" /> not seen
-      <span className="hint">Tap one for the details.</span>
+      <span>{t.slower}</span>
+      <span className="stat-tile few legend-swatch" /> {t.fewerTimed(MIN_TIMED)}
+      <span className="stat-tile unseen legend-swatch" /> {t.notSeen}
+      <span className="hint">{t.tapForDetails}</span>
     </div>
   )
 }
