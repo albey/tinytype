@@ -40,6 +40,8 @@ type Props = {
   onSayWordChange: (on: boolean) => void
   pictures: boolean
   onPicturesChange: (on: boolean) => void
+  photos: boolean
+  onPhotosChange: (on: boolean) => void
   onOpenRecorder: () => void
   onOpenStats: () => void
   onClose: () => void
@@ -198,6 +200,12 @@ export function SettingsPanel(props: Props) {
             detail={t.picturesDetail}
             on={props.pictures}
             onChange={props.onPicturesChange}
+          />
+          <Toggle
+            label={t.photos}
+            detail={t.photosDetail}
+            on={props.photos}
+            onChange={props.onPhotosChange}
           />
           <Toggle
             label={t.hintLetters}

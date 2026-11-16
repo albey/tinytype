@@ -16,6 +16,7 @@ import { StatsPanel } from './components/StatsPanel'
 import { COUNT_NUMBERS, HOW_MANY, MAX_COUNT, THINGS, nextCount, nextThing, randomCount, randomThing, type Game } from './counting'
 import { hasClip, loadClipIndex, preloadClips } from './letterClips'
 import { pictureFor, type CustomPictures } from './pictures'
+import { Photos } from './components/Photos'
 import { playOops, playWin } from './sounds'
 import { speakLetter, speakWord } from './speech'
 import { elapsed, recordCorrect, recordWrong, startTimer } from './stats'
@@ -59,6 +60,7 @@ export default function App() {
   const [oopsSound, setOopsSound] = usePersistentState('tinytype.oopsSound', true)
   const [sayWordAtEnd, setSayWordAtEnd] = usePersistentState('tinytype.sayWord', true)
   const [pictures, setPictures] = usePersistentState('tinytype.pictures', true)
+  const [photos, setPhotos] = usePersistentState('tinytype.photos', false)
   const [customPictures, setCustomPictures] = usePersistentState<CustomPictures>('tinytype.customPictures', {})
 
   const mode: Mode = FREE_PLAY ? savedMode : 'copy'
@@ -419,6 +421,7 @@ export default function App() {
               </button>
             )}
             <div className="rows-area">
+              {!counting && photos && <Photos key={`${language}:${word}`} word={word} language={language} />}
               <WordRows
                 word={word}
                 typed={typed}
@@ -507,6 +510,8 @@ export default function App() {
             onSayWordChange={setSayWordAtEnd}
             pictures={pictures}
             onPicturesChange={setPictures}
+            photos={photos}
+            onPhotosChange={setPhotos}
             onOpenRecorder={() => {
               setSettingsOpen(false)
               setRecorderOpen(true)

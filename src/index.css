@@ -104,6 +104,74 @@ button {
   animation: pop 0.4s ease-out both;
 }
 
+/* Photos of the word, above the letters (see Photos) */
+.photos {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 3vh;
+}
+
+.photo-frame {
+  position: relative;
+  animation: pop 0.4s ease-out both;
+}
+
+.photo {
+  display: block;
+  width: min(22vh, 200px);
+  height: min(16vh, 150px);
+  object-fit: cover;
+  border-radius: 16px;
+  background: var(--panel);
+  cursor: zoom-in;
+}
+
+/* The little × pops up on a photo under the mouse (always shown on touch screens). */
+.photo-remove {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 20px;
+  line-height: 30px;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.photo-frame:hover .photo-remove,
+.photo-remove:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (hover: none) {
+  .photo-remove {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.photo-zoom {
+  z-index: 20;
+  cursor: zoom-out;
+}
+
+.photo-zoom img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.3);
+  animation: pop 0.25s ease-out both;
+}
+
 .rounds {
   position: absolute;
   bottom: 8%;
@@ -746,6 +814,17 @@ button {
 
   .rows-area {
     grid-area: rows;
+  }
+
+  .photos {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .photo {
+    width: min(28vw, 120px);
+    height: min(calc(var(--app-h, 100vh) * 0.11), 90px);
+    border-radius: 10px;
   }
 
   .play.counting {
